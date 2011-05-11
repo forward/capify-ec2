@@ -14,7 +14,7 @@ In your deploy.rb:
     require "capify-ec2/capistrano"
     ec2_roles :web
 
-Will generate;
+Will generate
 
     task :server-1 do
       role :web, {server-1 public dns fetched from Amazon}
@@ -29,10 +29,11 @@ Will generate;
       role :web, {server-3 public dns fetched from Amazon}
     end
 
+Additionally
 
     ec2_roles :db
 
-Will generate;
+Will generate
 
     task :server-2 do
       role :web, {server-2 public dns fetched from Amazon}
