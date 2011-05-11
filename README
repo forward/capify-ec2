@@ -1,0 +1,8 @@
+This gem requires 'config/ec2.yml' in your project.
+The yml file needs to look something like this:
+	:aws_access_key_id: "YOUR ACCESS KEY"
+	:aws_secret_access_key: "YOUR SECRET"
+	:aws_params:
+	  :region: 'eu-west-1'
+	
+The :aws_params are optional.
