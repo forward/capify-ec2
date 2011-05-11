@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'fog'
 
-class UswitchFog
+class CapifyEc2
 
   def self.running_instances
     ec2_config = YAML.load(File.new("config/ec2.yml"))

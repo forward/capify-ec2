@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), '../uswitch-fog')
+require File.join(File.dirname(__FILE__), '../capify-ec2')
 
 Capistrano::Configuration.instance(:must_exist).load do
   def ec2_role(role_to_define)
@@ -9,7 +9,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     else
       defined_role = role_to_define
     end
-    instances = UswitchFog.get_instances_by_role(defined_role)
+    instances = CapifyEc2.get_instances_by_role(defined_role)
 
     instances.each do |instance|
       task instance.name.to_sym do
@@ -34,7 +34,7 @@ Capistrano::Configuration.instance(:must_exist).load do
 
   # task :add_tag do
   #   instance_name = variables[:logger].instance_variable_get("@options")[:actions].first
-  #   UswitchFog.add_tag(instance_name, tag, value)
+  #   CapifyEc2.add_tag(instance_name, tag, value)
   # end
   
   def ec2_roles(*roles)
@@ -46,6 +46,6 @@ Capistrano::Configuration.instance(:must_exist).load do
   end
   
   task :server_names do
-    puts UswitchFog.server_names.sort
+    puts CapifyEc2.server_names.sort
   end
 end
