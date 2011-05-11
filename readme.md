@@ -9,6 +9,10 @@ server-1 Tag: Role => "web"
 server-2 Tag: Role => "db"
 server-3 Tag: Role => "web"
 
+Installing
+
+    gem install capify-ec2
+
 In your deploy.rb:
 
     require "capify-ec2/capistrano"
@@ -31,6 +35,7 @@ Will generate
 
 Additionally
 
+    require "capify-ec2/capistrano"
     ec2_roles :db
 
 Will generate
@@ -49,6 +54,35 @@ Running
 
 will run the date command on all server's tagged with the web role
 
+More options
+====================================================
+
+    ec2_roles {:name=>"web", :options=>{:cron=>"server-1"}}
+  
+Will generate
+
+    task :server-1 do
+      role :web, {server-1 public dns fetched from Amazon}, :cron=>true
+    end
+
+    task :server-3 do
+      role :web, {server-1 public dns fetched from Amazon}
+    end
+
+    task :web do
+      role :web, {server-1 public dns fetched from Amazon}, :cron=>true
+      role :web, {server-3 public dns fetched from Amazon}
+    end
+
+Which is cool if you want a task like this in deploy.rb
+
+    task :update_cron => :web, :only=>{:cron} do
+      Do something to a server with cron on it
+    end
+
+Ec2 config
+====================================================
+
 This gem requires 'config/ec2.yml' in your project.
 The yml file needs to look something like this:
 
@@ -56,5 +90,5 @@ The yml file needs to look something like this:
     	:aws_secret_access_key: "YOUR SECRET"
     	:aws_params:
     	  :region: 'eu-west-1'
-	
+
 The :aws_params are optional.
