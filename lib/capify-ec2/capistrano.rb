@@ -26,11 +26,6 @@ Capistrano::Configuration.instance(:must_exist).load do
       end        
     end 
   end  
-
-  # task :add_tag do
-  #   instance_name = variables[:logger].instance_variable_get("@options")[:actions].first
-  #   CapifyEc2.add_tag(instance_name, tag, value)
-  # end
   
   def ec2_roles(*roles)
     roles.each {|role| ec2_role(role)}
@@ -38,7 +33,6 @@ Capistrano::Configuration.instance(:must_exist).load do
   
   task :deregister_instance do
     servers = variables[:logger].instance_variable_get("@options")[:actions].first
-    puts "Removing #{servers} from ELB"
     CapifyEc2.deregister_instance_from_elb(servers)
   end
   

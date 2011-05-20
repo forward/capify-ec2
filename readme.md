@@ -96,3 +96,5 @@ The :aws_params are optional.
 If :load_balanced is set to true, the gem will deregister 
 the instance from the load balancer before deploying and
 reregister it after, using before and after deploy hooks.
+:load_balanced only works for individual instances, not
+for roles.
