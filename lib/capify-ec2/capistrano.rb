@@ -2,15 +2,10 @@ require File.join(File.dirname(__FILE__), '../capify-ec2')
 
 Capistrano::Configuration.instance(:must_exist).load do
   def ec2_role(role_to_define)
-    subroles = {}
-    if role_to_define.is_a?(Hash)
-      defined_role = role_to_define[:name]
-      subroles = role_to_define[:options]
-    else
-      defined_role = role_to_define
-    end
+    defined_role = role_to_define.is_a?(Hash) ? role_to_define[:name] : role_to_define
     instances = CapifyEc2.get_instances_by_role(defined_role)
-
+    subroles = role_to_define.is_a?(Hash) ? role_to_define[:options] : {}
+    
     instances.each do |instance|
       task instance.name.to_sym do
         set :server_address, instance.dns_name
@@ -41,11 +36,26 @@ Capistrano::Configuration.instance(:must_exist).load do
     roles.each {|role| ec2_role(role)}
   end
   
+  task :deregister_instance do
+    servers = variables[:logger].instance_variable_get("@options")[:actions].first
+    puts "Removing #{servers} from ELB"
+    CapifyEc2.deregister_instance_from_elb(servers)
+  end
+  
+  task :register_instance do
+    CapifyEc2.register_instance_in_elb
+  end
+  
   task :date do
     run "date"
   end
   
   task :server_names do
     puts CapifyEc2.server_names.sort
+  end
+  
+  namespace :deploy do
+    before "deploy", "deregister_instance"
+    after "deploy", "register_instance"
   end
 end

@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name = "capify-ec2"
-  s.version = "1"
+  s.version = "1.1"
   s.authors = ["Noah Cantor"]
   s.email = "noah.cantor@forward.co.uk"
   s.homepage = "http://www.forward.co.uk"

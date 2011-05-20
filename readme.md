@@ -90,5 +90,9 @@ The yml file needs to look something like this:
     	:aws_secret_access_key: "YOUR SECRET"
     	:aws_params:
     	  :region: 'eu-west-1'
+		:load_balanced: true
 
 The :aws_params are optional.
+If :load_balanced is set to true, the gem will deregister 
+the instance from the load balancer before deploying and
+reregister it after, using before and after deploy hooks.
