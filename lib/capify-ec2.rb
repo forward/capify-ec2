@@ -43,6 +43,7 @@ class CapifyEc2
   def self.get_elb_name_by_instance(instance_id)
     @elb = Fog::AWS::ELB.new(:aws_access_key_id => @ec2_config[:aws_access_key_id], :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => @ec2_config[:aws_params][:region])
     @elb.load_balancers.each do |load_balancer|
+      p load_balancer
       load_balancer.instances.each {|instance| return load_balancer.id if instance_id == instance}
     end
     return nil
@@ -55,8 +56,22 @@ class CapifyEc2
     @elb.deregister_instances_from_load_balancer(@instance.id, @elb_name) unless @elb_name.nil?
   end
   
-  def self.register_instance_in_elb
-    return unless @ec2_config[:load_balanced]
-    @elb.register_instances_with_load_balancer(@instance.id, @elb_name) unless @elb_name.nil?
+    def self.register_instance_in_elb
+      return unless @ec2_config[:load_balanced]
+      @elb.register_instances_with_load_balancer(@instance.id, @elb_name) unless @elb_name.nil?
+      state = @elb.describe_instance_health(@elb_name, @instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
+      count = 0
+      sleepcount = 5
+      until (state == 'InService' || count == 6)
+        sleep sleepcount
+        count += 1
+        puts 'Verifying Instance Health'
+        state = @elb.describe_instance_health(@elb_name, @instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
+      end
+      if state == 'InService'
+        puts "#{@instance.tags['Name']}: Healthy"
+      else
+        puts "#{@instance.tags['Name']}: tests timed out after #{count*sleepcount} seconds."
+      end
+    end
   end
-end
