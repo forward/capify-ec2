@@ -51,5 +51,6 @@ Capistrano::Configuration.instance(:must_exist).load do
   namespace :deploy do
     before "deploy", "deregister_instance"
     after "deploy", "register_instance"
+    after "deploy:rollback", "register_instance"
   end
 end
