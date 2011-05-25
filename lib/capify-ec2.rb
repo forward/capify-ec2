@@ -61,12 +61,11 @@ class CapifyEc2
       fail_after = !@ec2_config[:fail_after].nil? ? @ec2_config[:fail_after] : 30
       @elb.register_instances_with_load_balancer(@instance.id, @elb_name) unless @elb_name.nil?
       state = @elb.describe_instance_health(@elb_name, @instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
-      count, time_elapsed = 0
+      time_elapsed = 0
       sleepcount = 5
       until (state == 'InService' || time_elapsed >= fail_after)
         sleep sleepcount
-        count += 1
-        time_elapsed = (count * sleepcount)
+        time_elapsed += sleepcount
         puts 'Verifying Instance Health'
         state = @elb.describe_instance_health(@elb_name, @instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
       end
