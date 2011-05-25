@@ -74,6 +74,7 @@ class CapifyEc2
         puts "#{@instance.tags['Name']}: Healthy"
       else
         puts "#{@instance.tags['Name']}: tests timed out after #{time_elapsed} seconds."
+        abort
       end
     end
   end
