@@ -4,10 +4,14 @@ require 'fog'
 class CapifyEc2
 
   attr_accessor :ec2_config, :instance, :elb_name, :elb
+  SLEEP_COUNT = 5
   
+  def self.ec2_config
+    YAML.load(File.new("config/ec2.yml"))
+  end  
+
   def self.running_instances
-    @ec2_config = YAML.load(File.new("config/ec2.yml"))
-    ec2 = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => @ec2_config[:aws_access_key_id], :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => @ec2_config[:aws_params][:region])
+    ec2 = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => ec2_config[:aws_access_key_id], :aws_secret_access_key => ec2_config[:aws_secret_access_key], :region => ec2_config[:aws_params][:region])
     running_instances = ec2.servers.select {|instance| instance.state == "running"}
     running_instances.each do |instance|
       instance.instance_eval do
@@ -20,6 +24,10 @@ class CapifyEc2
         end
       end
     end
+  end
+  
+  def self.instance_health(load_balancer, instance)
+    elb.describe_instance_health(load_balancer.id, instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
   end
   
   def self.get_instances_by_role(role)
@@ -40,41 +48,51 @@ class CapifyEc2
     running_instances.map {|instance| instance.name}
   end
   
-  def self.get_elb_name_by_instance(instance_id)
-    @elb = Fog::AWS::ELB.new(:aws_access_key_id => @ec2_config[:aws_access_key_id], :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => @ec2_config[:aws_params][:region])
-    @elb.load_balancers.each do |load_balancer|
-      p load_balancer
-      load_balancer.instances.each {|instance| return load_balancer.id if instance_id == instance}
-    end
-    return nil
+  def self.elb
+    Fog::AWS::ELB.new(:aws_access_key_id => ec2_config[:aws_access_key_id], :aws_secret_access_key => ec2_config[:aws_secret_access_key], :region => ec2_config[:aws_params][:region])
+  end 
+  
+  def self.get_load_balancer_by_instance(instance_id)
+    elb.load_balancers.inject({}) do |collect, load_balancer|
+      load_balancer.instances.each {|instance_id| collect[instance_id] = load_balancer}
+      collect
+    end[instance_id]
   end
      
   def self.deregister_instance_from_elb(instance_name)
-    return unless @ec2_config[:load_balanced]
-    @instance = get_instance_by_name(instance_name).first
-    return if @instance.nil?
-    @elb_name = get_elb_name_by_instance(@instance.id)
-    @elb.deregister_instances_from_load_balancer(@instance.id, @elb_name) unless @elb_name.nil?
+    return unless ec2_config[:load_balanced]
+    instance = get_instance_by_name(instance_name).first
+    return if instance.nil?
+    load_balancer = get_load_balancer_by_instance(instance.id)
+    return if load_balancer.nil?
+
+    elb.deregister_instances_from_load_balancer(instance.id, load_balancer.id)
   end
   
-  def self.register_instance_in_elb
-    return unless @ec2_config[:load_balanced]
-    return if (@instance.nil? || @elb_name.nil?)
-    fail_after = !@ec2_config[:fail_after].nil? ? @ec2_config[:fail_after] : 30
-    @elb.register_instances_with_load_balancer(@instance.id, @elb_name) unless @elb_name.nil?
-    state = @elb.describe_instance_health(@elb_name, @instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
+  def self.register_instance_in_elb(instance_name)
+    return if !ec2_config[:load_balanced]
+    instance = get_instance_by_name(instance_name).first
+    return if instance.nil?
+    load_balancer = get_load_balancer_by_instance(instance.id)
+    return if load_balancer.nil?
+    
+    elb.register_instances_with_load_balancer(instance.id, load_balancer.id)
+
+    fail_after = ec2_config[:fail_after] || 30
+    state = instance_health(load_balancer, instance)
     time_elapsed = 0
-    sleepcount = 5
-    until (state == 'InService' || time_elapsed >= fail_after)
-      sleep sleepcount
-      time_elapsed += sleepcount
-      puts 'Verifying Instance Health'
-      state = @elb.describe_instance_health(@elb_name, @instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
+    
+    while time_elapsed < fail_after
+      break if state == "InService"
+      sleep SLEEP_COUNT
+      time_elapsed += SLEEP_COUNT
+      STDERR.puts 'Verifying Instance Health'
+      state = instance_health(load_balancer, instance)
     end
     if state == 'InService'
-      puts "#{@instance.tags['Name']}: Healthy"
+      STDERR.puts "#{instance.name}: Healthy"
     else
-      puts "#{@instance.tags['Name']}: tests timed out after #{time_elapsed} seconds."
+      STDERR.puts "#{instance.name}: tests timed out after #{time_elapsed} seconds."
     end
   end
 end

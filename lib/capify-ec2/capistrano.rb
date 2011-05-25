@@ -37,7 +37,8 @@ Capistrano::Configuration.instance(:must_exist).load do
   end
   
   task :register_instance do
-    CapifyEc2.register_instance_in_elb
+    servers = variables[:logger].instance_variable_get("@options")[:actions].first
+    CapifyEc2.register_instance_in_elb(servers)
   end
   
   task :date do
