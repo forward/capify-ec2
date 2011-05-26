@@ -3,7 +3,7 @@ require 'fog'
 
 class CapifyEc2
 
-  attr_accessor :ec2_config, :instance, :elb_name, :elb
+  attr_accessor :load_balancer
   SLEEP_COUNT = 5
   
   def self.ec2_config
@@ -53,29 +53,39 @@ class CapifyEc2
   end 
   
   def self.get_load_balancer_by_instance(instance_id)
-    elb.load_balancers.inject({}) do |collect, load_balancer|
-      load_balancer.instances.each {|instance_id| collect[instance_id] = load_balancer}
+    hash = elb.load_balancers.inject({}) do |collect, load_balancer|
+      load_balancer.instances.each {|load_balancer_instance_id| collect[load_balancer_instance_id] = load_balancer}
       collect
-    end[instance_id]
+    end
+    hash[instance_id]
+  end
+  
+  def self.get_load_balancer_by_name(load_balancer_name)
+    lbs = {}
+    elb.load_balancers.each do |load_balancer|
+      lbs[load_balancer.id] = load_balancer
+    end
+    lbs[load_balancer_name]
+
   end
      
   def self.deregister_instance_from_elb(instance_name)
     return unless ec2_config[:load_balanced]
     instance = get_instance_by_name(instance_name).first
     return if instance.nil?
-    load_balancer = get_load_balancer_by_instance(instance.id)
-    return if load_balancer.nil?
+    @@load_balancer = get_load_balancer_by_instance(instance.id)
+    return if @@load_balancer.nil?
 
-    elb.deregister_instances_from_load_balancer(instance.id, load_balancer.id)
+    elb.deregister_instances_from_load_balancer(instance.id, @@load_balancer.id)
   end
   
-  def self.register_instance_in_elb(instance_name)
+  def self.register_instance_in_elb(instance_name, load_balancer_name = '')
     return if !ec2_config[:load_balanced]
     instance = get_instance_by_name(instance_name).first
     return if instance.nil?
-    load_balancer = get_load_balancer_by_instance(instance.id)
+    load_balancer = @@load_balancer || get_load_balancer_by_name(load_balancer_name)
     return if load_balancer.nil?
-    
+
     elb.register_instances_with_load_balancer(instance.id, load_balancer.id)
 
     fail_after = ec2_config[:fail_after] || 30

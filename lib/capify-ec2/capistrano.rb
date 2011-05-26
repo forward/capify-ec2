@@ -38,7 +38,8 @@ Capistrano::Configuration.instance(:must_exist).load do
   
   task :register_instance do
     servers = variables[:logger].instance_variable_get("@options")[:actions].first
-    CapifyEc2.register_instance_in_elb(servers)
+    load_balancer_name = variables[:logger].instance_variable_get("@options")[:vars][:loadbalancer]
+    CapifyEc2.register_instance_in_elb(servers, load_balancer_name)
   end
   
   task :date do
