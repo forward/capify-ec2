@@ -54,6 +54,19 @@ Running
 
 will run the date command on all server's tagged with the web role
 
+Running
+
+  cap server-1 register-instance -s loadbalancer=elb-1
+
+will register server-1 to be used by elb-1
+
+Running
+  
+  cap server-1 deregister instance
+
+will remove server-1 from whatever instance it is currently
+registered against.
+
 More options
 ====================================================
 
@@ -90,11 +103,12 @@ The yml file needs to look something like this:
     	:aws_secret_access_key: "YOUR SECRET"
     	:aws_params:
     	  :region: 'eu-west-1'
-		:load_balanced: true
+		  :load_balanced: true
 
 The :aws_params are optional.
-If :load_balanced is set to true, the gem will deregister 
-the instance from the load balancer before deploying and
-reregister it after, using before and after deploy hooks.
+If :load_balanced is set to true, the gem uses pre and post-deploy
+hooks to deregister the instance, reregister it, and validate its
+health.
 :load_balanced only works for individual instances, not
 for roles.
+====================================================
