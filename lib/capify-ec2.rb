@@ -83,7 +83,7 @@ class CapifyEc2
     return if !ec2_config[:load_balanced]
     instance = get_instance_by_name(instance_name).first
     return if instance.nil?
-    load_balancer = @@load_balancer || get_load_balancer_by_name(load_balancer_name)
+    load_balancer =  get_load_balancer_by_name(load_balancer_name) || @@load_balancer
     return if load_balancer.nil?
 
     elb.register_instances_with_load_balancer(instance.id, load_balancer.id)

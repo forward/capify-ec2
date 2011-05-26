@@ -62,7 +62,7 @@ will register server-1 to be used by elb-1
 
 Running
   
-  cap server-1 deregister instance
+  cap server-1 deregister-instance
 
 will remove server-1 from whatever instance it is currently
 registered against.
