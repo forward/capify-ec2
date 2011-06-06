@@ -32,9 +32,12 @@ class CapifyEc2
   end
   
   def self.get_instances_by_role(role)
-    selected_instances = running_instances.select do |instance| 
-      value = instance.case_insensitive_tag("Role")
-      value == role.to_s
+    selected_instances = running_instances.select do |instance|
+      server_roles = [instance.case_insensitive_tag("Role")] || []
+      if (roles_tag = instance.case_insensitive_tag("Roles"))        
+        server_roles += roles_tag.split(/\s*,\s*/)
+      end
+      server_roles.member?(role.to_s)
     end
   end  
   
