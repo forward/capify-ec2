@@ -7,7 +7,7 @@ eg: If you have three servers on amazon's ec2.
 
     server-1 Tag: Role => "web"
     server-2 Tag: Role => "db"
-    server-3 Tag: Role => "web"
+    server-3 Tag: Roles => "web, db"
 
 Installing
 
@@ -41,12 +41,17 @@ Additionally
 Will generate
 
     task :server-2 do
-      role :web, {server-2 public dns fetched from Amazon}
-    end
-    
-    task :db do
       role :db, {server-2 public dns fetched from Amazon}
     end
+
+    task :server-3 do
+      role :db, {server-3 public dns fetched from Amazon}
+    end
+
+    task :db do
+      role :db, {server-2 public dns fetched from Amazon}
+      role :db, {server-3 public dns fetched from Amazon}
+    end    
 
 Running
 
@@ -66,6 +71,13 @@ Running
 
 will remove server-1 from whatever instance it is currently
 registered against.
+
+Running
+  
+  cap ec2_status
+
+will list the currently running servers and their associated details 
+(public dns, instance id, roles etc)
 
 More options
 ====================================================
@@ -104,11 +116,15 @@ The yml file needs to look something like this:
     	:aws_params:
     	  :region: 'eu-west-1'
 		  :load_balanced: true
+		  :project_name: "YOUR APP NAME"
 
 The :aws_params are optional.
 If :load_balanced is set to true, the gem uses pre and post-deploy
 hooks to deregister the instance, reregister it, and validate its
 health.
-:load_balanced only works for individual instances, not
-for roles.
-====================================================
+:load_balanced only works for individual instances, not for roles.
+
+The :project_name parameter is optional. It will limit any commands to 
+running against those instances with a "Project" tag set to the value 
+"YOUR APP NAME".
+
