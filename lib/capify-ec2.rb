@@ -12,7 +12,8 @@ class CapifyEc2
 
   def self.running_instances
     ec2 = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => ec2_config[:aws_access_key_id], :aws_secret_access_key => ec2_config[:aws_secret_access_key], :region => ec2_config[:aws_params][:region])
-    running_instances = ec2.servers.select {|instance| instance.state == "running"}
+    project_tag = ec2_config[:project_tag]
+    running_instances = ec2.servers.select {|instance| instance.state == "running" && (project_tag.nil? || instance.tags["Project"] == project_tag) }
     running_instances.each do |instance|
       instance.instance_eval do
         def case_insensitive_tag(key)
