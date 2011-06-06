@@ -50,6 +50,14 @@ Capistrano::Configuration.instance(:must_exist).load do
     puts CapifyEc2.server_names.sort
   end
   
+  task :ec2_status do
+    CapifyEc2.running_instances.each_with_index do |instance, i|
+      puts sprintf "%-11s:   %-40s %-20s %-20s %-62s %-20s (%s)",
+        i.to_s.magenta, instance.name, instance.id.red, instance.flavor_id.cyan,
+        instance.dns_name.blue, instance.availability_zone.green, instance.roles.join(", ").yellow
+    end
+  end
+  
   namespace :deploy do
     before "deploy", "deregister_instance"
     after "deploy", "register_instance"

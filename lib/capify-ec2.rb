@@ -23,6 +23,15 @@ class CapifyEc2
         def name
           case_insensitive_tag("Name").split('-').reject {|portion| portion.include?(".")}.join("-")
         end
+        
+        def roles
+          role = case_insensitive_tag("Role")
+          roles = role.nil? ? [] : [role]
+          if (roles_tag = case_insensitive_tag("Roles"))
+            roles += case_insensitive_tag("Roles").split(/\s*,\s*/)
+          end
+          roles
+        end
       end
     end
   end
