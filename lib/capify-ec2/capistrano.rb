@@ -4,28 +4,47 @@ Capistrano::Configuration.instance(:must_exist).load do
   def ec2_role(role_to_define)
     defined_role = role_to_define.is_a?(Hash) ? role_to_define[:name] : role_to_define
     instances = CapifyEc2.get_instances_by_role(defined_role)
-    subroles = role_to_define.is_a?(Hash) ? role_to_define[:options] : {}
     
+    define_global_role(defined_role, instances)
+    define_instance_roles(defined_role, instances)
+    define_role_roles(defined_role, instances)
+  end  
+
+  def define_global_role(role_to_define, instances)
+    define_role(role_to_define, instances.map(&:dns_name))
+  end
+
+  def define_instance_roles(role_to_define, instances)
     instances.each do |instance|
       task instance.name.to_sym do
         set :server_address, instance.dns_name
-        role :web, *server_address
-        role :app, *server_address
+        define_role(role_to_define, instance.dns_name)
       end
     end
-    
-    task defined_role.to_sym do
+  end
+
+  def define_role_roles(role_to_define, instances)
+    task role_to_define.to_sym do
       instances.each do |instance|
-        new_options = {}
-        subroles.each {|key, value| new_options[key] = true if value.to_s == instance.name}
-        if new_options
-          role defined_role.to_sym, instance.dns_name, new_options
-        else
-          role defined_role.to_sym, instance.dns_name
-        end    
+        define_role(role_to_define, instance.dns_name)
       end        
     end 
-  end  
+  end
+
+  def define_role(role_to_define, dns_names)
+    dns_names = [dns_names] if dns_names.is_a?(String)
+    subroles = role_to_define.is_a?(Hash) ? role_to_define[:options] : {}
+    new_options = {}
+    subroles.each {|key, value| new_options[key] = true if value.to_s == instance.name}
+
+    dns_names.each do |dns_name|
+      if new_options
+        role role_to_define.to_sym, dns_name, new_options
+      else
+        role role_to_define.to_sym, dns_name
+      end
+    end
+  end
   
   def ec2_roles(*roles)
     roles.each {|role| ec2_role(role)}
