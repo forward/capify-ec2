@@ -5,20 +5,15 @@ Capistrano::Configuration.instance(:must_exist).load do
     defined_role = role_to_define.is_a?(Hash) ? role_to_define[:name] : role_to_define
     instances = CapifyEc2.get_instances_by_role(defined_role)
     
-    define_global_role(defined_role, instances)
     define_instance_roles(defined_role, instances)
     define_role_roles(defined_role, instances)
   end  
-
-  def define_global_role(role_to_define, instances)
-    define_role(role_to_define, instances.map(&:dns_name))
-  end
 
   def define_instance_roles(role_to_define, instances)
     instances.each do |instance|
       task instance.name.to_sym do
         set :server_address, instance.dns_name
-        define_role(role_to_define, instance.dns_name)
+        server instance.dns_name, role_to_define.to_sym
       end
     end
   end
@@ -27,7 +22,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     task role_to_define.to_sym do
       instances.each do |instance|
         define_role(role_to_define, instance.dns_name)
-      end        
+      end
     end 
   end
 
