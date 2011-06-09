@@ -1,43 +1,42 @@
 require File.join(File.dirname(__FILE__), '../capify-ec2')
 
 Capistrano::Configuration.instance(:must_exist).load do
-  def ec2_role(role_to_define)
-    defined_role = role_to_define.is_a?(Hash) ? role_to_define[:name] : role_to_define
-    instances = CapifyEc2.get_instances_by_role(defined_role)
+  def ec2_role(role_name_or_hash)
+    role = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
+    instances = CapifyEc2.get_instances_by_role(role[:name])
     
-    define_instance_roles(defined_role, instances)
-    define_role_roles(defined_role, instances)
+    define_instance_roles(role, instances)
+    define_role_roles(role, instances)
   end  
 
-  def define_instance_roles(role_to_define, instances)
+  def define_instance_roles(role, instances)
     instances.each do |instance|
       task instance.name.to_sym do
         set :server_address, instance.dns_name
-        server instance.dns_name, role_to_define.to_sym
+        define_role(role, instance)
       end
     end
   end
 
-  def define_role_roles(role_to_define, instances)
-    task role_to_define.to_sym do
+  def define_role_roles(role, instances)
+    defined_role =
+    task role[:name].to_sym do
       instances.each do |instance|
-        define_role(role_to_define, instance.dns_name)
+        define_role(role, instance)
       end
     end 
   end
 
-  def define_role(role_to_define, dns_names)
+  def define_role(role, instance)
     dns_names = [dns_names] if dns_names.is_a?(String)
-    subroles = role_to_define.is_a?(Hash) ? role_to_define[:options] : {}
+    subroles = role[:options]
     new_options = {}
     subroles.each {|key, value| new_options[key] = true if value.to_s == instance.name}
 
-    dns_names.each do |dns_name|
-      if new_options
-        role role_to_define.to_sym, dns_name, new_options
-      else
-        role role_to_define.to_sym, dns_name
-      end
+    if new_options
+      role role[:name].to_sym, instance.dns_name, new_options
+    else
+      role role[:name].to_sym, instance.dns_name
     end
   end
   
