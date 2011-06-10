@@ -5,6 +5,14 @@ Capistrano::Configuration.instance(:must_exist).load do
     role = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
     instances = CapifyEc2.get_instances_by_role(role[:name])
     
+    set :specified_roles, []
+    
+    if role[:options].delete(:default)
+      instances.each do |instance|
+        define_role(role, instance)
+      end
+    end
+    
     define_instance_roles(role, instances)
     define_role_roles(role, instances)
   end  
@@ -12,6 +20,8 @@ Capistrano::Configuration.instance(:must_exist).load do
   def define_instance_roles(role, instances)
     instances.each do |instance|
       task instance.name.to_sym do
+        specified_roles << role[:name]
+        remove_default_roles
         set :server_address, instance.dns_name
         define_role(role, instance)
       end
@@ -19,12 +29,17 @@ Capistrano::Configuration.instance(:must_exist).load do
   end
 
   def define_role_roles(role, instances)
-    defined_role =
     task role[:name].to_sym do
+      specified_roles << role[:name]
       instances.each do |instance|
+        remove_default_roles
         define_role(role, instance)
       end
     end 
+  end
+
+  def remove_default_roles
+    roles.reject! { |role_name, v| !specified_roles.member?(role_name) }
   end
 
   def define_role(role, instance)
