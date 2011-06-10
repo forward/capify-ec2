@@ -105,6 +105,17 @@ Which is cool if you want a task like this in deploy.rb
       Do something to a server with cron on it
     end
 
+
+ec2_roles :name=>:web, :options=>{ :default => true }
+
+Will make :web the default role so you can just type 'cap deploy'. 
+Multiple roles can be defaults so: 
+
+ec2_roles :name=>:web, :options=>{ :default => true }
+ec2_roles :name=>:app, :options=>{ :default => true }
+
+would be the equivalent of 'cap app web deploy'
+
 Ec2 config
 ====================================================
 
