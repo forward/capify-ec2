@@ -1,4 +1,5 @@
 require File.join(File.dirname(__FILE__), '../capify-ec2')
+require 'colored'
 
 Capistrano::Configuration.instance(:must_exist).load do
   def ec2_role(role_name_or_hash)
