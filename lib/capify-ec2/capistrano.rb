@@ -86,6 +86,15 @@ Capistrano::Configuration.instance(:must_exist).load do
     end
   end
   
+  task :ssh do
+    instances = CapifyEc2.running_instances
+    instance = respond_to?(:i) ? instances[i.to_i] : instances.first
+    port = ssh_options[:port] || 22 
+    command = "ssh -p #{port} #{user}@#{instance.dns_name}"
+    puts "Running `#{command}`"
+    system(command)
+  end
+  
   namespace :deploy do
     before "deploy", "deregister_instance"
     after "deploy", "register_instance"
