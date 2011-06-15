@@ -5,43 +5,50 @@ class CapifyEc2
 
   attr_accessor :load_balancer
   SLEEP_COUNT = 5
-  
+
   def self.ec2_config
     YAML.load(File.new("config/ec2.yml"))
   end  
 
-  def self.running_instances
-    ec2 = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => ec2_config[:aws_access_key_id], :aws_secret_access_key => ec2_config[:aws_secret_access_key], :region => ec2_config[:aws_params][:region])
-    project_tag = ec2_config[:project_tag]
-    running_instances = ec2.servers.select {|instance| instance.state == "running" && (project_tag.nil? || instance.tags["Project"] == project_tag) }
-    running_instances.each do |instance|
-      instance.instance_eval do
-        def case_insensitive_tag(key)
-          tags[key] || tags[key.downcase]
-        end
-        
-        def name
-          case_insensitive_tag("Name").split('-').reject {|portion| portion.include?(".")}.join("-")
-        end
-        
-        def roles
-          role = case_insensitive_tag("Role")
-          roles = role.nil? ? [] : [role]
-          if (roles_tag = case_insensitive_tag("Roles"))
-            roles += case_insensitive_tag("Roles").split(/\s*,\s*/)
+  def self.running_instances(region = nil)
+    regions = ec2_config[:aws_params][:regions] || [ec2_config[:aws_params][:region]]
+    regions = [region] if region
+    instances = []
+    regions.each do |region|
+      ec2 = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => ec2_config[:aws_access_key_id], :aws_secret_access_key => ec2_config[:aws_secret_access_key], :region => region)
+      project_tag = ec2_config[:project_tag]
+      running_instances = ec2.servers.select {|instance| instance.state == "running" && (project_tag.nil? || instance.tags["Project"] == project_tag) }
+      running_instances.each do |instance|
+        instance.instance_eval do
+          def case_insensitive_tag(key)
+            tags[key] || tags[key.downcase]
           end
-          roles
+        
+          def name
+            case_insensitive_tag("Name").split('-').reject {|portion| portion.include?(".")}.join("-")
+          end
+        
+          def roles
+            role = case_insensitive_tag("Role")
+            roles = role.nil? ? [] : [role]
+            if (roles_tag = case_insensitive_tag("Roles"))
+              roles += case_insensitive_tag("Roles").split(/\s*,\s*/)
+            end
+            roles
+          end
         end
+        instances = instances + running_instances
       end
     end
+    instances
   end
   
   def self.instance_health(load_balancer, instance)
     elb.describe_instance_health(load_balancer.id, instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
   end
   
-  def self.get_instances_by_role(role)
-    selected_instances = running_instances.select do |instance|
+  def self.get_instances_by_role(role, region = nil)
+    selected_instances = running_instances(region).select do |instance|
       server_roles = [instance.case_insensitive_tag("Role")] || []
       if (roles_tag = instance.case_insensitive_tag("Roles"))        
         server_roles += roles_tag.split(/\s*,\s*/)

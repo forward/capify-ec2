@@ -14,9 +14,24 @@ Capistrano::Configuration.instance(:must_exist).load do
       end
     end
     
+    regions = CapifyEc2.ec2_config[:aws_params][:regions] || [CapifyEc2.ec2_config[:aws_params][:region]]
+    regions.each do |region|
+      define_regions(region, role)
+    end unless regions.nil?
+    
     define_instance_roles(role, instances)
     define_role_roles(role, instances)
   end  
+
+  def define_regions(region, role)
+    instances = CapifyEc2.get_instances_by_role(role[:name], region)
+    task region.to_sym do 
+      instances.each do |instance|
+        remove_default_roles
+        define_role(role, instance)
+      end
+    end
+  end
 
   def define_instance_roles(role, instances)
     instances.each do |instance|
@@ -101,4 +116,5 @@ Capistrano::Configuration.instance(:must_exist).load do
     after "deploy", "register_instance"
     after "deploy:rollback", "register_instance"
   end
+  
 end
