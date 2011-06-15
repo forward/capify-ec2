@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'fog'
+require 'colored'
 
 class CapifyEc2
 
