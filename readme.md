@@ -136,7 +136,7 @@ The yml file needs to look something like this:
     	:aws_params:
     	  :region: 'eu-west-1'
 		  :load_balanced: true
-		  :project_name: "YOUR APP NAME"
+		  :project_tag: "YOUR APP NAME"
 
 The :aws_params are optional.
 If :load_balanced is set to true, the gem uses pre and post-deploy
@@ -144,7 +144,7 @@ hooks to deregister the instance, reregister it, and validate its
 health.
 :load_balanced only works for individual instances, not for roles.
 
-The :project_name parameter is optional. It will limit any commands to 
+The :project_tag parameter is optional. It will limit any commands to 
 running against those instances with a "Project" tag set to the value 
 "YOUR APP NAME".
 
