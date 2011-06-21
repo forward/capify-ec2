@@ -19,31 +19,12 @@ class CapifyEc2
       ec2 = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => ec2_config[:aws_access_key_id], :aws_secret_access_key => ec2_config[:aws_secret_access_key], :region => region)
       project_tag = ec2_config[:project_tag]
       running_instances = ec2.servers.select {|instance| instance.state == "running" && (project_tag.nil? || instance.tags["Project"] == project_tag) }
-      running_instances.each do |instance|
-        instance.instance_eval do
-          def case_insensitive_tag(key)
-            tags[key] || tags[key.downcase]
-          end
-        
-          def name
-            case_insensitive_tag("Name").split('-').reject {|portion| portion.include?(".")}.join("-")
-          end
-        
-          def roles
-            role = case_insensitive_tag("Role")
-            roles = role.nil? ? [] : [role]
-            if (roles_tag = case_insensitive_tag("Roles"))
-              roles += case_insensitive_tag("Roles").split(/\s*,\s*/)
-            end
-            roles
-          end
-        end
-        instances = instances + running_instances
-      end
+      running_instances.each { |instance| process_instance(instance) }
+      instances = instances + running_instances
     end
     instances
   end
-  
+
   def self.instance_health(load_balancer, instance)
     elb.describe_instance_health(load_balancer.id, instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
   end
@@ -126,4 +107,29 @@ class CapifyEc2
       STDERR.puts "#{instance.name}: tests timed out after #{time_elapsed} seconds."
     end
   end
+  
+  private
+  def self.process_instance(instance)
+    instance.instance_eval do
+      
+      def case_insensitive_tag(key)
+        tags[key] || tags[key.downcase]
+      end
+
+      def name
+        case_insensitive_tag("Name").split('-').reject {|portion| portion.include?(".")}.join("-")
+      end
+
+      def roles
+        role = case_insensitive_tag("Role")
+        roles = role.nil? ? [] : [role]
+        if (roles_tag = case_insensitive_tag("Roles"))
+          roles += case_insensitive_tag("Roles").split(/\s*,\s*/)
+        end
+        roles
+      end
+      
+    end
+  end
+  
 end
