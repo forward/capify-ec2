@@ -9,10 +9,15 @@ class CapifyEc2
   def self.ec2_config
     YAML.load(File.new("config/ec2.yml"))
   end  
-
-  def self.running_instances(region = nil)
+  
+  def self.determine_regions(region = nil)
     regions = ec2_config[:aws_params][:regions] || [ec2_config[:aws_params][:region]]
     regions = [region] if region
+    regions
+  end
+  
+  def self.running_instances(region = nil)
+    regions = determine_regions(region)
     instances = []
     regions.each do |region|
       ec2 = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => ec2_config[:aws_access_key_id], :aws_secret_access_key => ec2_config[:aws_secret_access_key], :region => region)
