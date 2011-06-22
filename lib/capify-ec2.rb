@@ -43,7 +43,7 @@ class CapifyEc2
             roles
           end
         end
-        instances = instances + running_instances
+        instances << instance
       end
     end
     instances

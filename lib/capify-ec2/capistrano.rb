@@ -26,8 +26,8 @@ Capistrano::Configuration.instance(:must_exist).load do
   def define_regions(region, role)
     instances = CapifyEc2.get_instances_by_role(role[:name], region)
     task region.to_sym do 
+      remove_default_roles
       instances.each do |instance|
-        remove_default_roles
         define_role(role, instance)
       end
     end
@@ -38,7 +38,6 @@ Capistrano::Configuration.instance(:must_exist).load do
       task instance.name.to_sym do
         specified_roles << role[:name]
         remove_default_roles
-        set :server_address, instance.dns_name
         define_role(role, instance)
       end
     end
@@ -59,13 +58,12 @@ Capistrano::Configuration.instance(:must_exist).load do
   end
 
   def define_role(role, instance)
-    dns_names = [dns_names] if dns_names.is_a?(String)
     subroles = role[:options]
     new_options = {}
     subroles.each {|key, value| new_options[key] = true if value.to_s == instance.name}
 
     if new_options
-      role role[:name].to_sym, instance.dns_name, new_options
+      role role[:name].to_sym, instance.dns_name, new_options 
     else
       role role[:name].to_sym, instance.dns_name
     end
