@@ -106,8 +106,10 @@ Capistrano::Configuration.instance(:must_exist).load do
   
   desc "Allows ssh to instance by id. cap ssh -s i=INDEX"
   task :ssh do
-    instances = CapifyEc2.running_instances
-    instance = respond_to?(:i) ? instances[i.to_i] : instances.first
+    server = variables[:logger].instance_variable_get("@options")[:actions].first
+    instance = CapifyEc2.get_instances_by_name(server)
+    # instances = CapifyEc2.running_instances
+    # instance = respond_to?(:i) ? instances[i.to_i] : instances.first
     port = ssh_options[:port] || 22 
     command = "ssh -p #{port} #{user}@#{instance.dns_name}"
     puts "Running `#{command}`"
