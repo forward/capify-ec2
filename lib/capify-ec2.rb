@@ -71,7 +71,7 @@ class CapifyEc2
   end
   
   def self.server_names
-    running_instances.map {|instance| instance.name}
+    running_instances.map {|instance| instance.case_insensitive_tag("Name")}
   end
   
   def self.elb
