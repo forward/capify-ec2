@@ -73,11 +73,13 @@ Capistrano::Configuration.instance(:must_exist).load do
     roles.each {|role| ec2_role(role)}
   end
   
+  desc "Deregisters instance from its ELB"
   task :deregister_instance do
     servers = variables[:logger].instance_variable_get("@options")[:actions].first
     CapifyEc2.deregister_instance_from_elb(servers)
   end
   
+  desc "Registers an instance with an ELB."
   task :register_instance do
     servers = variables[:logger].instance_variable_get("@options")[:actions].first
     load_balancer_name = variables[:logger].instance_variable_get("@options")[:vars][:loadbalancer]
@@ -88,10 +90,12 @@ Capistrano::Configuration.instance(:must_exist).load do
     run "date"
   end
   
+  desc "Prints list of ec2 server names"
   task :server_names do
     puts CapifyEc2.server_names.sort
   end
   
+  desc "Prints out all ec2 instances. index, name, instance_id, size, dns_name, region, tags"
   task :ec2_status do
     CapifyEc2.running_instances.each_with_index do |instance, i|
       puts sprintf "%-11s:   %-40s %-20s %-20s %-62s %-20s (%s)",
@@ -100,6 +104,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     end
   end
   
+  desc "Allows ssh to instance by id. cap ssh -s i=INDEX"
   task :ssh do
     instances = CapifyEc2.running_instances
     instance = respond_to?(:i) ? instances[i.to_i] : instances.first
