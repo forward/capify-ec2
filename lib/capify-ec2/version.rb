@@ -1,5 +1,5 @@
 module Capify
   module Ec2
-    VERSION = "1.1.9.pre.1"
+    VERSION = "1.1.9"
   end
 end
