@@ -73,6 +73,10 @@ Capistrano::Configuration.instance(:must_exist).load do
     roles.each {|role| ec2_role(role)}
   end
   
+  def numeric?(object)
+    true if Float(object) rescue false
+  end
+  
   desc "Deregisters instance from its ELB"
   task :deregister_instance do
     servers = variables[:logger].instance_variable_get("@options")[:actions].first
@@ -107,7 +111,7 @@ Capistrano::Configuration.instance(:must_exist).load do
   desc "Allows ssh to instance by id. cap ssh <INSTANCE NAME>"
   task :ssh do
     server = variables[:logger].instance_variable_get("@options")[:actions][1]
-    instance = CapifyEc2.get_instance_by_name(server).first
+    instance = numeric?(server) ? CapifyEc2.running_instances[server.to_i] : CapifyEc2.get_instance_by_name(server).first
     port = ssh_options[:port] || 22 
     command = "ssh -p #{port} #{user}@#{instance.dns_name}"
     puts "Running `#{command}`"
