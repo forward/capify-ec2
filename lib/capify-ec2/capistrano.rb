@@ -6,7 +6,6 @@ Capistrano::Configuration.instance(:must_exist).load do
     role = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
     server_type = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
     instances = CapifyEc2.get_instances_by_role(role[:name], server_type)
-
     if role[:options].delete(:default)
       instances.each do |instance|
         define_role(role, instance)
@@ -15,15 +14,18 @@ Capistrano::Configuration.instance(:must_exist).load do
     
     regions = CapifyEc2.ec2_config[:aws_params][:regions] || [CapifyEc2.ec2_config[:aws_params][:region]]
     regions.each do |region|
-      define_regions(region, role, server_type)
+      define_regions(region, role)
     end unless regions.nil?
     
     define_instance_roles(role, instances)    
     define_role_roles(role, instances)
+    
+    named_instance = CapifyEc2.get_instance_by_name(server_type)
+    define_instance_roles(role, [named_instance]) unless named_instance.nil?
   end  
 
-  def define_regions(region, role, server_type)
-    instances = CapifyEc2.get_instances_by_role(role[:name], server_type, region)
+  def define_regions(region, role)
+    instances = CapifyEc2.get_instances_by_region(role[:name], region)
     task region.to_sym do 
       instances.each do |instance|
         define_role(role, instance)

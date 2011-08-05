@@ -53,21 +53,31 @@ class CapifyEc2
     elb.describe_instance_health(load_balancer.id, instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
   end
   
-  def self.get_instances_by_role(role, server_type, region = nil)
-    selected_instances = running_instances(region).select do |instance|
+  def self.get_instances_by_role(role, server_type)
+    filter_instances_by_role(running_instances, role, server_type)
+  end
+  
+  def self.get_instances_by_region(role, region)
+    return unless region
+    region_instances = running_instances(region)
+    filter_instances_by_role(region_instances,role)
+  end 
+  
+  def self.filter_instances_by_role(instances, role, server_type = nil)
+    selected_instances = instances.select do |instance|
       server_roles = [instance.case_insensitive_tag("Role")] || []
       if (roles_tag = instance.case_insensitive_tag("Roles"))        
         server_roles += roles_tag.split(/\s*,\s*/)
       end
       server_type.nil? ? server_roles.member?(role.to_s) : (server_roles.member?(role.to_s) && server_type == role.to_s)
     end
-  end  
+  end 
   
   def self.get_instance_by_name(name)
     selected_instances = running_instances.select do |instance|
       value = instance.case_insensitive_tag("Name")
       value == name.to_s
-    end
+    end.first
   end
   
   def self.server_names
