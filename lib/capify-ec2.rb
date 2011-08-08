@@ -107,7 +107,7 @@ class CapifyEc2
      
   def self.deregister_instance_from_elb(instance_name)
     return unless ec2_config[:load_balanced]
-    instance = get_instance_by_name(instance_name).first
+    instance = get_instance_by_name(instance_name)
     return if instance.nil?
     @@load_balancer = get_load_balancer_by_instance(instance.id)
     return if @@load_balancer.nil?
