@@ -2,9 +2,23 @@ require File.join(File.dirname(__FILE__), '../capify-ec2')
 require 'colored'
 
 Capistrano::Configuration.instance(:must_exist).load do
-  def ec2_role(role_name_or_hash)
-    role = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
+  def ec2_roles(*roles)
     server_type = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
+    
+    named_instance = CapifyEc2.get_instance_by_name(server_type)
+    task named_instance.name.to_sym do
+      named_instance.roles.each do |role|
+        p role
+        define_role({:name => role, :options => {}}, named_instance)
+      end
+    end unless named_instance.nil?
+    
+    roles.each {|role| ec2_role(role, server_type)}
+    
+  end
+  
+  def ec2_role(role_name_or_hash, server_type)
+    role = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
     instances = CapifyEc2.get_instances_by_role(role[:name], server_type)
     if role[:options].delete(:default)
       instances.each do |instance|
@@ -19,9 +33,6 @@ Capistrano::Configuration.instance(:must_exist).load do
     
     define_instance_roles(role, instances)    
     define_role_roles(role, instances)
-    
-    named_instance = CapifyEc2.get_instance_by_name(server_type)
-    define_instance_roles(role, [named_instance]) unless named_instance.nil?
   end  
 
   def define_regions(region, role)
@@ -50,6 +61,7 @@ Capistrano::Configuration.instance(:must_exist).load do
   end
 
   def define_role(role, instance)
+    p role[:name]
     subroles = role[:options]
     new_options = {}
     subroles.each {|key, value| new_options[key] = true if value.to_s == instance.name}
@@ -60,11 +72,7 @@ Capistrano::Configuration.instance(:must_exist).load do
       role role[:name].to_sym, instance.dns_name
     end
   end
-  
-  def ec2_roles(*roles)
-    roles.each {|role| ec2_role(role)}
-  end
-  
+    
   def numeric?(object)
     true if Float(object) rescue false
   end
