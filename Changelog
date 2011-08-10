@@ -1,0 +1,21 @@
+## 1.1.12 (Aug 09, 2011)
+
+Features:
+
+  - Add ability to deploy to all similar roles in a region
+  - Add ability to cap ssh <ec2 index number>
+  - Add ability to cap ssh <instance name>
+  - Froze dependencies to known working gems
+  - Allow cap deploy with a server set as default
+  - Added descriptions (try cap -T)
+  - Fix gem dependencies for cap ec2_status
+  - Allows registering and deregistering of instances with an ELB
+  - Servers can have Role or Roles on ec2
+  
+
+Bugfixes:
+
+  - Allow options to be passed to ec2_roles
+  - Deregister and register server with elb
+  - Fixed server_names directive to display case insensitive names. Matches with ssh
+  - Defaults no longer break options
