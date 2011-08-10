@@ -8,13 +8,10 @@ Capistrano::Configuration.instance(:must_exist).load do
     named_instance = CapifyEc2.get_instance_by_name(server_type)
     task named_instance.name.to_sym do
       named_instance.roles.each do |role|
-        p role
         define_role({:name => role, :options => {}}, named_instance)
       end
     end unless named_instance.nil?
-    
     roles.each {|role| ec2_role(role, server_type)}
-    
   end
   
   def ec2_role(role_name_or_hash, server_type)
@@ -61,7 +58,6 @@ Capistrano::Configuration.instance(:must_exist).load do
   end
 
   def define_role(role, instance)
-    p role[:name]
     subroles = role[:options]
     new_options = {}
     subroles.each {|key, value| new_options[key] = true if value.to_s == instance.name}
