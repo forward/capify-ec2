@@ -1,3 +1,9 @@
+## 1.1.13 (Aug 10, 2011)
+
+Bugfixes:
+
+  - Obscure bug fixed. Multiple roles where some instances weren't in all roles would throw an error if you tried to tell a task to only fire when particular roles were deployed to. This bug only fired if you performed your action on a single instance (cap server deploy).
+
 ## 1.1.12 (Aug 09, 2011)
 
 Features:
