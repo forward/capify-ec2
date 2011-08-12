@@ -17,7 +17,7 @@ Features:
   - Fix gem dependencies for cap ec2_status
   - Allows registering and deregistering of instances with an ELB
   - Servers can have Role or Roles on ec2
-  
+
 
 Bugfixes:
 
