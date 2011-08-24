@@ -1,3 +1,19 @@
+## 1.1.14 (Aug 24, 2011)
+
+Bugfixes:
+
+  - Fixed chaining of tasks
+  
+Features:
+
+  - Moved the following to ec2 namespace to make it clearer what's part of the gem
+    - status (formerly ec2_status)
+    - register_instance
+    - deregister_instance
+    - date
+    - server_names
+
+
 ## 1.1.13 (Aug 10, 2011)
 
 Bugfixes:

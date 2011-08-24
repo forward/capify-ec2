@@ -74,7 +74,7 @@ registered against.
 
 Running
   
-  cap ec2_status
+  cap ec2:status
 
 will list the currently running servers and their associated details 
 (public dns, instance id, roles etc)
