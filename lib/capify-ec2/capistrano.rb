@@ -38,7 +38,7 @@ Capistrano::Configuration.instance(:must_exist).load do
       server = variables[:logger].instance_variable_get("@options")[:actions][1]
       instance = numeric?(server) ? CapifyEc2.running_instances[server.to_i] : CapifyEc2.get_instance_by_name(server)
       port = ssh_options[:port] || 22 
-      command = "ssh -p #{port} #{user}@#{instance.dns_name}"
+      command = "ssh -p #{port} #{user}@#{server_address}"
       puts "Running `#{command}`"
       system(command)
     end
@@ -55,6 +55,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     server_name = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
     named_instance = CapifyEc2.get_instance_by_name(server_name)
     task named_instance.name.to_sym do
+      server_address = named_instance.dns_name
       named_instance.roles.each do |role|
         define_role({:name => role, :options => {}}, named_instance)
       end
@@ -64,25 +65,28 @@ Capistrano::Configuration.instance(:must_exist).load do
   
   def ec2_role(role_name_or_hash)
     role = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
+    
     instances = CapifyEc2.get_instances_by_role(role[:name])
     if role[:options].delete(:default)
       instances.each do |instance|
         define_role(role, instance)
       end
-    end  
-    define_role_roles(role, instances)
-  
+    end
+        
     regions = CapifyEc2.ec2_config[:aws_params][:regions] || [CapifyEc2.ec2_config[:aws_params][:region]]
     regions.each do |region|
       define_regions(region, role)
     end unless regions.nil?
-  
+    
+    define_role_roles(role, instances)
     define_instance_roles(role, instances)    
+
   end  
 
   def define_regions(region, role)
     instances = CapifyEc2.get_instances_by_region(role[:name], region)
-    task region.to_sym do 
+    task region.to_sym do
+      remove_default_roles
       instances.each do |instance|
         define_role(role, instance)
       end
@@ -92,6 +96,7 @@ Capistrano::Configuration.instance(:must_exist).load do
   def define_instance_roles(role, instances)
     instances.each do |instance|
       task instance.name.to_sym do
+        remove_default_roles
         define_role(role, instance)
       end
     end
@@ -100,6 +105,7 @@ Capistrano::Configuration.instance(:must_exist).load do
   def define_role_roles(role, instances)
     task role[:name].to_sym do
       instances.each do |instance|
+        remove_default_roles
         define_role(role, instance)
       end
     end 
@@ -120,4 +126,9 @@ Capistrano::Configuration.instance(:must_exist).load do
   def numeric?(object)
     true if Float(object) rescue false
   end
+  
+  def remove_default_roles	 	
+    roles = []
+  end
+  
 end
