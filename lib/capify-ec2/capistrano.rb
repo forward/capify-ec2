@@ -55,6 +55,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     server_name = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
     named_instance = CapifyEc2.get_instance_by_name(server_name)
     task named_instance.name.to_sym do
+      remove_default_roles
       server_address = named_instance.dns_name
       named_instance.roles.each do |role|
         define_role({:name => role, :options => {}}, named_instance)
