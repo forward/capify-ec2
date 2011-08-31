@@ -104,8 +104,8 @@ Capistrano::Configuration.instance(:must_exist).load do
 
   def define_role_roles(role, instances)
     task role[:name].to_sym do
+      remove_default_roles
       instances.each do |instance|
-        remove_default_roles
         define_role(role, instance)
       end
     end 
@@ -128,7 +128,7 @@ Capistrano::Configuration.instance(:must_exist).load do
   end
   
   def remove_default_roles	 	
-    roles = []
+    roles.reject! { true }
   end
   
 end
