@@ -38,7 +38,7 @@ Capistrano::Configuration.instance(:must_exist).load do
       server = variables[:logger].instance_variable_get("@options")[:actions][1]
       instance = numeric?(server) ? CapifyEc2.running_instances[server.to_i] : CapifyEc2.get_instance_by_name(server)
       port = ssh_options[:port] || 22 
-      command = "ssh -p #{port} #{user}@#{server_address}"
+      command = "ssh -p #{port} #{user}@#{instance.dns_name}"
       puts "Running `#{command}`"
       system(command)
     end
