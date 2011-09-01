@@ -3,6 +3,7 @@
 Bugfixes:
 
   - Fixed chaining of tasks
+  - Fixed handling of defaults and their interactions with specified tasks (particularly across regions)
   
 Features:
 
