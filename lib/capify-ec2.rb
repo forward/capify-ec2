@@ -12,7 +12,7 @@ class CapifyEc2
   end  
   
   def self.determine_regions(region = nil)
-    region.nil? ? (ec2_config[:aws_params][:regions] || [ec2_config[:aws_params][:region]]) : region
+    region.nil? ? (ec2_config[:aws_params][:regions] || [ec2_config[:aws_params][:region]]) : [region]
   end
   
   def self.running_instances(region = nil)
