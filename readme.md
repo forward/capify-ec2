@@ -82,12 +82,11 @@ will list the currently running servers and their associated details
 
 Running
 
-  cap ec2:ssh -s i=1
+  cap ec2:ssh #
 
 will launch ssh using the user and port specified in your configuration.
-The 'i' argument is the index of the server to ssh into. Use the 'ec2_status'
-command to see the list of servers with their indices. If the 'i' argument
-is omitted then the first instance will be used.
+The # argument is the index of the server to ssh into. Use the 'ec2:status'
+command to see the list of servers with their indices.
 
 More options
 ====================================================
