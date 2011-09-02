@@ -40,7 +40,7 @@ Capistrano::Configuration.instance(:must_exist).load do
       port = ssh_options[:port] || 22 
       command = "ssh -p #{port} #{user}@#{instance.dns_name}"
       puts "Running `#{command}`"
-      system(command)
+      exec(command)
     end
 
   end
