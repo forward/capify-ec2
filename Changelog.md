@@ -1,3 +1,15 @@
+## 1.1.16 (Sep 23, 2011)
+
+Features:
+
+  - Added 'option' handling. Allows users to move cap options ('cron,' 'db,' 'resque,' etc.) to 'Option' field at AWS.
+
+## 1.1.15 (Sep 02, 2011)
+
+Bugfixes:
+
+  - Fixed problem with ec2:ssh task not terminating properly
+
 ## 1.1.14 (Aug 24, 2011)
 
 Bugfixes:

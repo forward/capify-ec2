@@ -40,6 +40,14 @@ class CapifyEc2
             end
             roles
           end
+          def options
+            option = case_insensitive_tag("Option")
+            options = option.nil? ? [] : [option]
+            if (options_tag = case_insensitive_tag("Options"))
+              options += case_insensitive_tag("Options").split(/\s*,\s*/)
+            end
+            options
+          end
         end
         instances << instance
       end

@@ -5,7 +5,7 @@ capify-ec2 is used to generate capistrano namespaces using ec2 tags.
 
 eg: If you have three servers on amazon's ec2.
 
-    server-1 Tag: Role => "web"
+    server-1 Tag: Role => "web", Options => "cron, resque"
     server-2 Tag: Role => "db"
     server-3 Tag: Roles => "web, db"
 
@@ -24,7 +24,7 @@ Will generate
 
 ```ruby
 task :server-1 do
-  role :web, {server-1 public dns fetched from Amazon}
+  role :web, {server-1 public dns fetched from Amazon}, :cron=>true, :resque=>true
 end
 
 task :server-3 do
@@ -32,7 +32,7 @@ task :server-3 do
 end
 
 task :web do
-  role :web, {server-1 public dns fetched from Amazon}
+  role :web, {server-1 public dns fetched from Amazon}, :cron=>true, :resque=>true
   role :web, {server-3 public dns fetched from Amazon}
 end
 ```
@@ -107,6 +107,9 @@ command to see the list of servers with their indices.
 
 More options
 ====================================================
+
+In addition to specifying options (e.g. 'cron') at the server level, it is also possible to specify it at the project level.
+Use with caution! This does not work with autoscaling.
 
 ```ruby
 ec2_roles {:name=>"web", :options=>{:cron=>"server-1"}}
