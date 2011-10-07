@@ -147,4 +147,15 @@ class CapifyEc2
       STDERR.puts "#{instance.name}: tests timed out after #{time_elapsed} seconds."
     end
   end
+  
+  def self.elasticip
+    Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => ec2_config[:aws_access_key_id], :aws_secret_access_key => ec2_config[:aws_secret_access_key], :region => region)
+  end
+  
+  def self.allocate_address
+    ec2 = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => ec2_config[:aws_access_key_id], :aws_secret_access_key => ec2_config[:aws_secret_access_key], :region => region)
+    ip = ec2.allocate_address
+    p ip
+    ip
+  end
 end

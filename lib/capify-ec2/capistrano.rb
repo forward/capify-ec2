@@ -42,6 +42,11 @@ Capistrano::Configuration.instance(:must_exist).load do
       puts "Running `#{command}`"
       exec(command)
     end
+    
+    desc "Allocate Elastic IP address to AWS account"
+    task :allocate_address do
+      CapifyEc2.allocate_address
+    end
 
   end
   
@@ -54,6 +59,7 @@ Capistrano::Configuration.instance(:must_exist).load do
   def ec2_roles(*roles)
     server_name = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
     named_instance = CapifyEc2.get_instance_by_name(server_name)
+    
     task named_instance.name.to_sym do
       remove_default_roles
       server_address = named_instance.dns_name
