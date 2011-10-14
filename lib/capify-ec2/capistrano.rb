@@ -11,6 +11,7 @@ Capistrano::Configuration.instance(:must_exist).load do
           instance.dns_name.blue, instance.availability_zone.green, instance.roles.join(", ").yellow
       end
     end
+
     desc "Deregisters instance from its ELB"
     task :deregister_instance do
       instance_name = variables[:logger].instance_variable_get("@options")[:actions].first
