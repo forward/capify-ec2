@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'fog'
 require 'colored'
-require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
+#require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
 #require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/instances')
 
 class CapifyEc2
@@ -17,7 +17,18 @@ class CapifyEc2
     regions.each do |region|
       servers = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => @ec2_config[:aws_access_key_id], 
         :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => region).servers
-      servers.each {|server| @instances << server if server.ready?}
+      servers.each do |server| 
+        server.tags do |tag, value|
+          def server.send(:define_method, "#{tag.downcase}") do 
+            if tag =~ /.*s/
+              value.split(',').gsub(/\s/,'')
+            else
+              value
+            end
+          end
+        end
+        @instances << server if server.ready?
+      end
     end
   end 
   
