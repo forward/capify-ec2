@@ -2,6 +2,7 @@ require 'rubygems'
 require 'fog'
 require 'colored'
 require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
+#require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/instances')
 
 class CapifyEc2
 
@@ -16,7 +17,7 @@ class CapifyEc2
     regions.each do |region|
       servers = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => @ec2_config[:aws_access_key_id], 
         :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => region).servers
-      servers.each {|server| @instances << server}
+      servers.each {|server| @instances << server if server.ready?}
     end
   end 
   
@@ -24,20 +25,25 @@ class CapifyEc2
     region.nil? ? (@ec2_config[:aws_params][:regions] || [@ec2_config[:aws_params][:region]]) : [region]
   end
   
-  def active_instances()
-    @instances.select {|instance| instance.state == "running"}
+  def project_instances(project_tag)
+    @instances.select {|instance| instance.tags["Project"] == project_tag}
   end
   
-  def project_instances(project_tag)
-    active_instances.select {|instance| instance.tags["Project"] == project_tag}
+  def display_instances
+    @instances.each_with_index do |instance, i|
+      puts sprintf "%-11s:   %-40s %-20s %-20s %-62s %-20s (%s)",
+        i.to_s.magenta, instance.case_insensitive_tag("Name"), instance.id.red, instance.flavor_id.cyan,
+        instance.dns_name.blue, instance.availability_zone.green, instance.roles.join(", ").yellow
+      end
   end
   
   def regional_instances(region)
-    active_instances.select {|instance| instance.availability_zone.match(region)}
+    @instances.select {|instance| instance.availability_zone.match(region)}
   end
   
   def running_instances(region = nil)
-    instances = @ec2_config[:project_tag].nil? ? active_instances : project_instances(@ec2_config[:project_tag])
+    instances = @ec2_config[:project_tag].nil? ? @instances : project_instances(@ec2_config[:project_tag])
+    instances.each {|instance| p instance.tags}
   end
   
   def instance_health(load_balancer, instance)

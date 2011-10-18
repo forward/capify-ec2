@@ -6,10 +6,30 @@ module AWSServerExtension
   def case_insensitive_tag(key)
     tags[key] || tags[key.downcase]
   end
-
+  
   def name
     case_insensitive_tag("Name").split('-').reject {|portion| portion.include?(".")}.join("-")
   end
+
+  # module ClassMethods
+  #   def define_methods_from_tags
+  #     tags.each do |tag, value|
+  #       tag.downcase!
+  #       define_method tag do
+  #         if tag =~ /.*s/
+  #           value.split(',').gsub(/\s/,'')
+  #         else
+  #           value
+  #         end
+  #       end
+  #     end
+  #   end
+  # end
+  # 
+  # def self.included(base)
+  #   base.extend(ClassMethods)
+  #   base.define_methods_from_tags
+  # end
 
   def roles
     role = case_insensitive_tag("Role")

@@ -5,11 +5,7 @@ Capistrano::Configuration.instance(:must_exist).load do
   namespace :ec2 do
     desc "Prints out all ec2 instances. index, name, instance_id, size, dns_name, region, tags"
     task :status do
-      CapifyEc2.new.running_instances.each_with_index do |instance, i|
-        puts sprintf "%-11s:   %-40s %-20s %-20s %-62s %-20s (%s)",
-          i.to_s.magenta, instance.case_insensitive_tag("Name"), instance.id.red, instance.flavor_id.cyan,
-          instance.dns_name.blue, instance.availability_zone.green, instance.roles.join(", ").yellow
-      end
+      CapifyEc2.new.display_instances
     end
 
     desc "Deregisters instance from its ELB"
