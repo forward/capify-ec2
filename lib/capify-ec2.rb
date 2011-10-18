@@ -1,75 +1,60 @@
 require 'rubygems'
 require 'fog'
 require 'colored'
+require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
 
 class CapifyEc2
 
   attr_accessor :load_balancer
   SLEEP_COUNT = 5
-
-  def self.ec2_config
-    YAML.load(File.new("config/ec2.yml"))
-  end  
   
-  def self.determine_regions(region = nil)
-    region.nil? ? (ec2_config[:aws_params][:regions] || [ec2_config[:aws_params][:region]]) : [region]
-  end
-  
-  def self.running_instances(region = nil)
-    regions = determine_regions(region)
-    instances = []
+  def initialize()
+    @ec2_config = YAML.load(File.new("config/ec2.yml"))
+    regions = determine_regions()
+    
+    @instances = []
     regions.each do |region|
-      ec2 = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => ec2_config[:aws_access_key_id], :aws_secret_access_key => ec2_config[:aws_secret_access_key], :region => region)
-      project_tag = ec2_config[:project_tag]
-      running_instances = ec2.servers.select {|instance| instance.state == "running" && (project_tag.nil? || instance.tags["Project"] == project_tag) }
-      running_instances.each do |instance|
-        instance.instance_eval do
-          def case_insensitive_tag(key)
-            tags[key] || tags[key.downcase]
-          end
-        
-          def name
-            case_insensitive_tag("Name").split('-').reject {|portion| portion.include?(".")}.join("-")
-          end
-        
-          def roles
-            role = case_insensitive_tag("Role")
-            roles = role.nil? ? [] : [role]
-            if (roles_tag = case_insensitive_tag("Roles"))
-              roles += case_insensitive_tag("Roles").split(/\s*,\s*/)
-            end
-            roles
-          end
-          def options
-            option = case_insensitive_tag("Option")
-            options = option.nil? ? [] : [option]
-            if (options_tag = case_insensitive_tag("Options"))
-              options += case_insensitive_tag("Options").split(/\s*,\s*/)
-            end
-            options
-          end
-        end
-        instances << instance
-      end
+      servers = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => @ec2_config[:aws_access_key_id], 
+        :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => region).servers
+      servers.each {|server| @instances << server}
     end
-    instances
+  end 
+  
+  def determine_regions(region = nil)
+    region.nil? ? (@ec2_config[:aws_params][:regions] || [@ec2_config[:aws_params][:region]]) : [region]
   end
   
-  def self.instance_health(load_balancer, instance)
+  def active_instances()
+    @instances.select {|instance| instance.state == "running"}
+  end
+  
+  def project_instances(project_tag)
+    active_instances.select {|instance| instance.tags["Project"] == project_tag}
+  end
+  
+  def regional_instances(region)
+    active_instances.select {|instance| instance.availability_zone.match(region)}
+  end
+  
+  def running_instances(region = nil)
+    instances = @ec2_config[:project_tag].nil? ? active_instances : project_instances(@ec2_config[:project_tag])
+  end
+  
+  def instance_health(load_balancer, instance)
     elb.describe_instance_health(load_balancer.id, instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
   end
   
-  def self.get_instances_by_role(role)
+  def get_instances_by_role(role)
     filter_instances_by_role(running_instances, role)
   end
   
-  def self.get_instances_by_region(role, region)
+  def get_instances_by_region(role, region)
     return unless region
     region_instances = running_instances(region)
     filter_instances_by_role(region_instances,role)
   end 
   
-  def self.filter_instances_by_role(instances, role)
+  def filter_instances_by_role(instances, role)
     selected_instances = instances.select do |instance|
       server_roles = [instance.case_insensitive_tag("Role")] || []
       if (roles_tag = instance.case_insensitive_tag("Roles"))        
@@ -79,22 +64,22 @@ class CapifyEc2
     end
   end 
   
-  def self.get_instance_by_name(name)
+  def get_instance_by_name(name)
     selected_instances = running_instances.select do |instance|
       value = instance.case_insensitive_tag("Name")
       value == name.to_s
     end.first
   end
   
-  def self.server_names
+  def server_names
     running_instances.map {|instance| instance.case_insensitive_tag("Name")}
   end
   
-  def self.elb
-    Fog::AWS::ELB.new(:aws_access_key_id => ec2_config[:aws_access_key_id], :aws_secret_access_key => ec2_config[:aws_secret_access_key], :region => ec2_config[:aws_params][:region])
+  def elb
+    Fog::AWS::ELB.new(:aws_access_key_id => @ec2_config[:aws_access_key_id], :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => @ec2_config[:aws_params][:region])
   end 
   
-  def self.get_load_balancer_by_instance(instance_id)
+  def get_load_balancer_by_instance(instance_id)
     hash = elb.load_balancers.inject({}) do |collect, load_balancer|
       load_balancer.instances.each {|load_balancer_instance_id| collect[load_balancer_instance_id] = load_balancer}
       collect
@@ -102,7 +87,7 @@ class CapifyEc2
     hash[instance_id]
   end
   
-  def self.get_load_balancer_by_name(load_balancer_name)
+  def get_load_balancer_by_name(load_balancer_name)
     lbs = {}
     elb.load_balancers.each do |load_balancer|
       lbs[load_balancer.id] = load_balancer
@@ -111,8 +96,8 @@ class CapifyEc2
 
   end
      
-  def self.deregister_instance_from_elb(instance_name)
-    return unless ec2_config[:load_balanced]
+  def deregister_instance_from_elb(instance_name)
+    return unless @ec2_config[:load_balanced]
     instance = get_instance_by_name(instance_name)
     return if instance.nil?
     @@load_balancer = get_load_balancer_by_instance(instance.id)
@@ -121,8 +106,8 @@ class CapifyEc2
     elb.deregister_instances_from_load_balancer(instance.id, @@load_balancer.id)
   end
   
-  def self.register_instance_in_elb(instance_name, load_balancer_name = '')
-    return if !ec2_config[:load_balanced]
+  def register_instance_in_elb(instance_name, load_balancer_name = '')
+    return if !@ec2_config[:load_balanced]
     instance = get_instance_by_name(instance_name)
     return if instance.nil?
     load_balancer =  get_load_balancer_by_name(load_balancer_name) || @@load_balancer
@@ -130,7 +115,7 @@ class CapifyEc2
 
     elb.register_instances_with_load_balancer(instance.id, load_balancer.id)
 
-    fail_after = ec2_config[:fail_after] || 30
+    fail_after = @ec2_config[:fail_after] || 30
     state = instance_health(load_balancer, instance)
     time_elapsed = 0
     
