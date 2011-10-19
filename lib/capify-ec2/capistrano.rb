@@ -33,7 +33,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     desc "Allows ssh to instance by id. cap ssh <INSTANCE NAME>"
     task :ssh do
       server = variables[:logger].instance_variable_get("@options")[:actions][1]
-      instance = numeric?(server) ? CapifyEc2.new.running_instances[server.to_i] : CapifyEc2.new.get_instance_by_name(server)
+      instance = numeric?(server) ? CapifyEc2.new.instances[server.to_i] : CapifyEc2.new.get_instance_by_name(server)
       port = ssh_options[:port] || 22 
       command = "ssh -p #{port} #{user}@#{instance.dns_name}"
       puts "Running `#{command}`"
@@ -71,13 +71,12 @@ Capistrano::Configuration.instance(:must_exist).load do
       instances.each do |instance|
         define_role(role, instance)
       end
-    end
-        
+    end    
     regions = @capify_ec2.determine_regions
     regions.each do |region|
       define_regions(region, role)
     end unless regions.nil?
-    
+
     define_role_roles(role, instances)
     define_instance_roles(role, instances)    
 
@@ -115,7 +114,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     options = role[:options]
     new_options = {}
     options.each {|key, value| new_options[key] = true if value.to_s == instance.name}
-    instance.options.each {|option| new_options[option.to_sym] = true}
+    instance.option.each {|option| new_options[option.to_sym] = true} unless instance.option.nil?
 
     if new_options
       role role[:name].to_sym, instance.dns_name, new_options 

@@ -1,12 +1,10 @@
 require 'rubygems'
 require 'fog'
 require 'colored'
-#require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
-#require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/instances')
 
 class CapifyEc2
 
-  attr_accessor :load_balancer
+  attr_accessor :load_balancer, :instances
   SLEEP_COUNT = 5
   
   def initialize()
@@ -17,79 +15,51 @@ class CapifyEc2
     regions.each do |region|
       servers = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => @ec2_config[:aws_access_key_id], 
         :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => region).servers
-      servers.each do |server| 
-        server.tags do |tag, value|
-          def server.send(:define_method, "#{tag.downcase}") do 
-            if tag =~ /.*s/
-              value.split(',').gsub(/\s/,'')
-            else
-              value
-            end
-          end
-        end
+      servers.each do |server|
         @instances << server if server.ready?
       end
     end
   end 
   
-  def determine_regions(region = nil)
-    region.nil? ? (@ec2_config[:aws_params][:regions] || [@ec2_config[:aws_params][:region]]) : [region]
-  end
-  
-  def project_instances(project_tag)
-    @instances.select {|instance| instance.tags["Project"] == project_tag}
+  def determine_regions()
+    @ec2_config[:aws_params][:regions] || [@ec2_config[:aws_params][:region]]
   end
   
   def display_instances
     @instances.each_with_index do |instance, i|
       puts sprintf "%-11s:   %-40s %-20s %-20s %-62s %-20s (%s)",
-        i.to_s.magenta, instance.case_insensitive_tag("Name"), instance.id.red, instance.flavor_id.cyan,
-        instance.dns_name.blue, instance.availability_zone.green, instance.roles.join(", ").yellow
-      end
+        i.to_s.magenta, instance.name, instance.id.red, instance.flavor_id.cyan,
+        instance.dns_name.blue, instance.availability_zone.green, (instance.role || "").yellow
+    end
   end
-  
-  def regional_instances(region)
-    @instances.select {|instance| instance.availability_zone.match(region)}
+    
+  def project_instances(project_tag)
+    @instances.select {|instance| instance.tags["Project"] == project_tag}
   end
   
   def running_instances(region = nil)
     instances = @ec2_config[:project_tag].nil? ? @instances : project_instances(@ec2_config[:project_tag])
-    instances.each {|instance| p instance.tags}
-  end
-  
-  def instance_health(load_balancer, instance)
-    elb.describe_instance_health(load_balancer.id, instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
   end
   
   def get_instances_by_role(role)
-    filter_instances_by_role(running_instances, role)
+    @instances.select {|instance| instance.role == role.to_s}
   end
   
   def get_instances_by_region(role, region)
     return unless region
-    region_instances = running_instances(region)
-    filter_instances_by_role(region_instances,role)
-  end 
-  
-  def filter_instances_by_role(instances, role)
-    selected_instances = instances.select do |instance|
-      server_roles = [instance.case_insensitive_tag("Role")] || []
-      if (roles_tag = instance.case_insensitive_tag("Roles"))        
-        server_roles += roles_tag.split(/\s*,\s*/)
-      end
-      server_roles.member?(role.to_s)
-    end
+    @instances.select {|instance| instance.availability_zone.match(region) && instance.role == role.to_s}
   end 
   
   def get_instance_by_name(name)
-    selected_instances = running_instances.select do |instance|
-      value = instance.case_insensitive_tag("Name")
-      value == name.to_s
-    end.first
+    @instances.select {|instance| instance.name == name}.first
+  end
+    
+  def instance_health(load_balancer, instance)
+    elb.describe_instance_health(load_balancer.id, instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
   end
   
   def server_names
-    running_instances.map {|instance| instance.case_insensitive_tag("Name")}
+    @instances.map {|instance| instance.name}
   end
   
   def elb
