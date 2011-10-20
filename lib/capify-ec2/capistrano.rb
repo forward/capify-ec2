@@ -55,7 +55,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     task named_instance.name.to_sym do
       remove_default_roles
       server_address = named_instance.dns_name
-      named_instance.roles.each do |role|
+      named_instance.role.each do |role|
         define_role({:name => role, :options => {}}, named_instance)
       end
     end unless named_instance.nil?
@@ -114,7 +114,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     options = role[:options]
     new_options = {}
     options.each {|key, value| new_options[key] = true if value.to_s == instance.name}
-    instance.option.each {|option| new_options[option.to_sym] = true} unless instance.option.nil?
+    instance.option.each {|option| new_options[option.to_sym] = true} rescue false
 
     if new_options
       role role[:name].to_sym, instance.dns_name, new_options 

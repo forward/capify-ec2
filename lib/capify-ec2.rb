@@ -1,6 +1,8 @@
 require 'rubygems'
 require 'fog'
 require 'colored'
+require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
+
 
 class CapifyEc2
 
@@ -42,12 +44,12 @@ class CapifyEc2
   end
   
   def get_instances_by_role(role)
-    @instances.select {|instance| instance.role == role.to_s}
+    @instances.select {|instance| instance.role == role.to_s rescue false}
   end
   
   def get_instances_by_region(role, region)
     return unless region
-    @instances.select {|instance| instance.availability_zone.match(region) && instance.role == role.to_s}
+    @instances.select {|instance| instance.availability_zone.match(region) && instance.role == role.to_s rescue false}
   end 
   
   def get_instance_by_name(name)
