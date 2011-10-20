@@ -31,7 +31,7 @@ class CapifyEc2
     @instances.each_with_index do |instance, i|
       puts sprintf "%-11s:   %-40s %-20s %-20s %-62s %-20s (%s)",
         i.to_s.magenta, instance.name, instance.id.red, instance.flavor_id.cyan,
-        instance.dns_name.blue, instance.availability_zone.green, (instance.role || "").yellow
+        instance.dns_name.blue, instance.availability_zone.green, (instance.role rescue "").yellow
     end
   end
     

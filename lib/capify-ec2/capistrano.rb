@@ -3,6 +3,7 @@ require 'colored'
 
 Capistrano::Configuration.instance(:must_exist).load do  
   namespace :ec2 do
+    
     desc "Prints out all ec2 instances. index, name, instance_id, size, dns_name, region, tags"
     task :status do
       CapifyEc2.new.display_instances
@@ -46,7 +47,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     after "deploy", "ec2:register_instance"
     after "deploy:rollback", "ec2:register_instance"
   end
-  
+    
   def ec2_roles(*roles)
     @capify_ec2 = CapifyEc2.new
     server_name = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
@@ -65,6 +66,7 @@ Capistrano::Configuration.instance(:must_exist).load do
   
   def ec2_role(role_name_or_hash)
     role = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
+    @roles[role[:name]]
     
     instances = @capify_ec2.get_instances_by_role(role[:name])
     if role[:options].delete(:default)
@@ -83,7 +85,11 @@ Capistrano::Configuration.instance(:must_exist).load do
   end  
 
   def define_regions(region, role)
-    instances = @capify_ec2.get_instances_by_region(role[:name], region)
+    instances = []
+    @roles.each do |role_name, junk|
+      region_instances = @capify_ec2.get_instances_by_region(role_name, region)
+      region_instances.each {|instance| instances << instance} unless region_instances.nil?
+    end
     task region.to_sym do
       remove_default_roles
       instances.each do |instance|
