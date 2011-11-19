@@ -166,8 +166,8 @@ The yml file needs to look something like this:
 :load_balanced: true
 :project_tag: "YOUR APP NAME"
 ```
+aws_access_key_id, aws_secret_access_key, and region are required. Other settings are optional.
 
-The :aws_params are optional.
 If :load_balanced is set to true, the gem uses pre and post-deploy
 hooks to deregister the instance, reregister it, and validate its
 health.
