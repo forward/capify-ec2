@@ -1,3 +1,9 @@
+## 1.2.1 (Dec 02, 2011)
+
+Bugfixes:
+
+  - Regression bug fixed. Projects weren't being filtered properly.
+  
 ## 1.2.0 (Dec 02, 2011)
 
 Features:
