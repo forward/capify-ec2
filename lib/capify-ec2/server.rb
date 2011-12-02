@@ -9,7 +9,7 @@ module Fog
           tags.each do |key, value|
             tag = key.downcase.gsub(/\W/, '').chomp('s')
             return value if method_sym.to_s == tag
-          end
+          end if tags
           super
         end
         
@@ -17,7 +17,7 @@ module Fog
           tags.each do |key, value|
             tag = key.downcase.gsub(/\W/, '').chomp('s')
             return true if method_sym.to_s == tag
-          end
+          end if tags
           super
         end
       end

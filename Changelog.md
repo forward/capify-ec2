@@ -1,3 +1,10 @@
+## 1.2.0 (Dec 02, 2011)
+
+Features:
+
+  - Much improved performance
+  - US-West-1 now available (fog upgrade)
+  
 ## 1.1.16 (Sep 23, 2011)
 
 Features:
