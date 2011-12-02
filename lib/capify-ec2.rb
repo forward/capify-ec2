@@ -28,32 +28,32 @@ class CapifyEc2
   end
   
   def display_instances
-    @instances.each_with_index do |instance, i|
+    desired_instances.each_with_index do |instance, i|
       puts sprintf "%-11s:   %-40s %-20s %-20s %-62s %-20s (%s)",
         i.to_s.magenta, instance.name, instance.id.red, instance.flavor_id.cyan,
         instance.dns_name.blue, instance.availability_zone.green, (instance.role rescue "").yellow
     end
   end
     
-  def project_instances(project_tag)
-    @instances.select {|instance| instance.tags["Project"] == project_tag}
+  def project_instances
+    @instances.select {|instance| instance.tags["Project"] == @ec2_config[:project_tag]}
   end
   
-  def running_instances(region = nil)
-    instances = @ec2_config[:project_tag].nil? ? @instances : project_instances(@ec2_config[:project_tag])
+  def desired_instances(region = nil)
+    instances = @ec2_config[:project_tag].nil? ? @instances : project_instances
   end
   
   def get_instances_by_role(role)
-    @instances.select {|instance| instance.role == role.to_s rescue false}
+    desired_instances.select {|instance| instance.role == role.to_s rescue false}
   end
   
   def get_instances_by_region(role, region)
     return unless region
-    @instances.select {|instance| instance.availability_zone.match(region) && instance.role == role.to_s rescue false}
+    desired_instances.select {|instance| instance.availability_zone.match(region) && instance.role == role.to_s rescue false}
   end 
   
   def get_instance_by_name(name)
-    @instances.select {|instance| instance.name == name}.first
+    desired_instances.select {|instance| instance.name == name}.first
   end
     
   def instance_health(load_balancer, instance)
@@ -61,7 +61,7 @@ class CapifyEc2
   end
   
   def server_names
-    @instances.map {|instance| instance.name}
+    desired_instances.map {|instance| instance.name}
   end
   
   def elb
