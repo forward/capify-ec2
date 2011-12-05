@@ -1,3 +1,9 @@
+## 1.2.2 (Dec 05, 2011)
+
+Bugfixes:
+
+  - Mismatch between ec2:status and ec2:ssh lead to connecting to the wrong server.
+
 ## 1.2.1 (Dec 02, 2011)
 
 Bugfixes:
