@@ -1,3 +1,9 @@
+## 1.2.3 (Jan 04, 2011)
+
+Bugfixes:
+
+  - Options flag not properly recognized.
+
 ## 1.2.2 (Dec 05, 2011)
 
 Bugfixes:
