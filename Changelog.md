@@ -7,6 +7,7 @@ Features:
 Bugfixes:
 
   - Options flag not properly recognized.
+  - Fixed longstanding issue of handling comma-separated roles
 
 ## 1.2.2 (Dec 05, 2011)
 
