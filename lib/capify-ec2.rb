@@ -43,13 +43,13 @@ class CapifyEc2
     instances = @ec2_config[:project_tag].nil? ? @instances : project_instances
   end
   
-  def get_instances_by_role(role)
-    desired_instances.select {|instance| instance.role == role.to_s rescue false}
+  def get_instances_by_role(roles)
+    desired_instances.select {|instance| instance.roles == roles.to_s rescue false}
   end
   
-  def get_instances_by_region(role, region)
+  def get_instances_by_region(roles, region)
     return unless region
-    desired_instances.select {|instance| instance.availability_zone.match(region) && instance.role == role.to_s rescue false}
+    desired_instances.select {|instance| instance.availability_zone.match(region) && instance.roles == roles.to_s rescue false}
   end 
   
   def get_instance_by_name(name)

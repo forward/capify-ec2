@@ -120,7 +120,10 @@ Capistrano::Configuration.instance(:must_exist).load do
     options = role[:options]
     new_options = {}
     options.each {|key, value| new_options[key] = true if value.to_s == instance.name}
-    instance.option.each { |option| new_options[option.to_sym] = true } rescue false
+    instance.options.each do |option| 
+      results = option.split(',')
+      results.each {|result| new_options[result.to_sym] = true }
+    end rescue false
 
     if new_options
       role role[:name].to_sym, instance.dns_name, new_options 

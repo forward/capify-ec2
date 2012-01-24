@@ -1,4 +1,8 @@
-## 1.2.3 (Jan 04, 2011)
+## 1.2.3 (Jan 24, 2011)
+
+Features:
+
+  - Remove handling of singular 'role.' It was causing unnecessary difficulties.
 
 Bugfixes:
 
