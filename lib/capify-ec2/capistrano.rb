@@ -56,7 +56,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     task named_instance.name.to_sym do
       remove_default_roles
       server_address = named_instance.dns_name
-      named_instance.role.each do |role|
+      named_instance.roles.each do |role|
         define_role({:name => role, :options => {:on_no_matching_servers => :continue}}, named_instance)
       end
     end unless named_instance.nil?
