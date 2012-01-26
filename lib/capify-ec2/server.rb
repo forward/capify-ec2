@@ -5,6 +5,10 @@ module Fog
   module Compute
     class AWS
       class Server
+        def contact_point
+          dns_name || public_ip_address || private_ip_address
+        end
+        
         def method_missing(method_sym, *arguments, &block)
           tags.each do |key, value|
             tag = key.downcase.gsub(/\W/, '')

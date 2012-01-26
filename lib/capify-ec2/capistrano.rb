@@ -4,7 +4,7 @@ require 'colored'
 Capistrano::Configuration.instance(:must_exist).load do  
   namespace :ec2 do
     
-    desc "Prints out all ec2 instances. index, name, instance_id, size, dns_name, region, tags"
+    desc "Prints out all ec2 instances. index, name, instance_id, size, DNS/IP, region, tags"
     task :status do
       CapifyEc2.new.display_instances
     end
@@ -36,7 +36,7 @@ Capistrano::Configuration.instance(:must_exist).load do
       server = variables[:logger].instance_variable_get("@options")[:actions][1]
       instance = numeric?(server) ? CapifyEc2.new.desired_instances[server.to_i] : CapifyEc2.new.get_instance_by_name(server)
       port = ssh_options[:port] || 22 
-      command = "ssh -p #{port} #{user}@#{instance.dns_name}"
+      command = "ssh -p #{port} #{user}@#{instance.contact_point}"
       puts "Running `#{command}`"
       exec(command)
     end
@@ -55,7 +55,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     
     task named_instance.name.to_sym do
       remove_default_roles
-      server_address = named_instance.dns_name
+      server_address = named_instance.contact_point
       named_instance.roles.each do |role|
         define_role({:name => role, :options => {:on_no_matching_servers => :continue}}, named_instance)
       end
@@ -126,9 +126,9 @@ Capistrano::Configuration.instance(:must_exist).load do
     end rescue false
 
     if new_options
-      role role[:name].to_sym, instance.dns_name, new_options 
+      role role[:name].to_sym, instance.contact_point, new_options 
     else
-      role role[:name].to_sym, instance.dns_name
+      role role[:name].to_sym, instance.contact_point
     end
   end
   
