@@ -43,8 +43,12 @@ class CapifyEc2
     instances = @ec2_config[:project_tag].nil? ? @instances : project_instances
   end
   
+  def get_instances_by_tag(tag, value)
+    desired_instances.select {|instance| instance.tags[tag].split(',').include?(value.to_s) rescue false}
+  end
+  
   def get_instances_by_role(role)
-    desired_instances.select {|instance| instance.roles.split(',').include?(role.to_s) rescue false}
+    get_instances_by_tag('Roles', role)
   end
   
   def get_instances_by_region(roles, region)
@@ -53,7 +57,8 @@ class CapifyEc2
   end 
   
   def get_instance_by_name(name)
-    desired_instances.select {|instance| instance.name == name}.first
+    get_instances_by_tag('Name', name).first
+    # desired_instances.select {|instance| instance.name == name}.first
   end
     
   def instance_health(load_balancer, instance)
