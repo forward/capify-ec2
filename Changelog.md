@@ -1,3 +1,9 @@
+## 1.2.5 (Jan 26, 2011)
+
+Features:
+
+  - Added ability to connect to VPC instances. Very basic functionality.
+
 ## 1.2.4 (Jan 24, 2011)
 
 Features:
