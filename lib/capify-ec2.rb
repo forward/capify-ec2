@@ -31,7 +31,7 @@ class CapifyEc2
     desired_instances.each_with_index do |instance, i|
       puts sprintf "%-11s:   %-40s %-20s %-20s %-62s %-20s (%s)",
         i.to_s.magenta, instance.name, instance.id.red, instance.flavor_id.cyan,
-        instance.contact_point.blue, instance.availability_zone.green, (instance.tags["Roles"] rescue "").yellow
+        instance.contact_point.blue, instance.availability_zone.green, (instance.tags["Roles"] || "").yellow
     end
   end
 
@@ -46,7 +46,7 @@ class CapifyEc2
   def desired_instances(region = nil)
     instances = @ec2_config[:project_tag].nil? ? @instances : project_instances
   end
-
+ 
   def get_instances_by_role(role)
     desired_instances.select {|instance| instance.tags['Roles'].split(',').include?(role.to_s) rescue false}
   end
