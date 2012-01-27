@@ -31,8 +31,12 @@ class CapifyEc2
     desired_instances.each_with_index do |instance, i|
       puts sprintf "%-11s:   %-40s %-20s %-20s %-62s %-20s (%s)",
         i.to_s.magenta, instance.name, instance.id.red, instance.flavor_id.cyan,
-        instance.contact_point.blue, instance.availability_zone.green, (instance.roles rescue "").yellow
+        instance.contact_point.blue, instance.availability_zone.green, (instance.tags["Roles"] rescue "").yellow
     end
+  end
+
+  def server_names
+    desired_instances.map {|instance| instance.name}
   end
     
   def project_instances
@@ -42,13 +46,9 @@ class CapifyEc2
   def desired_instances(region = nil)
     instances = @ec2_config[:project_tag].nil? ? @instances : project_instances
   end
-  
-  def get_instances_by_tag(tag, value)
-    desired_instances.select {|instance| instance.tags[tag].split(',').include?(value.to_s) rescue false}
-  end
-  
+
   def get_instances_by_role(role)
-    get_instances_by_tag('Roles', role)
+    desired_instances.select {|instance| instance.tags['Roles'].split(',').include?(role.to_s) rescue false}
   end
   
   def get_instances_by_region(roles, region)
@@ -57,18 +57,13 @@ class CapifyEc2
   end 
   
   def get_instance_by_name(name)
-    get_instances_by_tag('Name', name).first
-    # desired_instances.select {|instance| instance.name == name}.first
+    desired_instances.select {|instance| instance.name == name}.first
   end
     
   def instance_health(load_balancer, instance)
     elb.describe_instance_health(load_balancer.id, instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
   end
-  
-  def server_names
-    desired_instances.map {|instance| instance.name}
-  end
-  
+    
   def elb
     Fog::AWS::ELB.new(:aws_access_key_id => @ec2_config[:aws_access_key_id], :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => @ec2_config[:aws_params][:region])
   end 
