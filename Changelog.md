@@ -6,7 +6,7 @@ Notes:
   
 Bugfixes:
 
-  - Documentation showed whitespaces in Options and Roles, but they weren't supported in the code.
+  - Documentation showed whitespaces in Options and Roles, but they weren't supported in the code. (Thanks ennui2342)
 
 ## 1.2.5 (Jan 26, 2012)
 
