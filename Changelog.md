@@ -3,6 +3,10 @@
 Notes:
 
   - Minor refactoring to make the code clearer
+  
+Bugfixes:
+
+  - Documentation showed whitespaces in Options and Roles, but they weren't supported in the code.
 
 ## 1.2.5 (Jan 26, 2012)
 
