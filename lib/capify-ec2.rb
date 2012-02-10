@@ -9,8 +9,8 @@ class CapifyEc2
   attr_accessor :load_balancer, :instances
   SLEEP_COUNT = 5
   
-  def initialize()
-    @ec2_config = YAML.load(File.new("config/ec2.yml"))
+  def initialize(config_path = "config/ec2.yml")
+    @ec2_config = YAML.load(File.new(config_path))
     regions = determine_regions()
     
     @instances = []

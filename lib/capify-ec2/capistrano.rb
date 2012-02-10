@@ -2,24 +2,28 @@ require File.join(File.dirname(__FILE__), '../capify-ec2')
 require 'colored'
 
 Capistrano::Configuration.instance(:must_exist).load do  
+  def capify_ec2
+    @capify_ec2 ||= CapifyEc2.new
+  end
+
   namespace :ec2 do
     
     desc "Prints out all ec2 instances. index, name, instance_id, size, DNS/IP, region, tags"
     task :status do
-      CapifyEc2.new.display_instances
+      capify_ec2.display_instances
     end
 
     desc "Deregisters instance from its ELB"
     task :deregister_instance do
       instance_name = variables[:logger].instance_variable_get("@options")[:actions].first
-      CapifyEc2.new.deregister_instance_from_elb(instance_name)
+      capify_ec2.deregister_instance_from_elb(instance_name)
     end
 
     desc "Registers an instance with an ELB."
     task :register_instance do
       instance_name = variables[:logger].instance_variable_get("@options")[:actions].first
       load_balancer_name = variables[:logger].instance_variable_get("@options")[:vars][:loadbalancer]
-      CapifyEc2.new.register_instance_in_elb(instance_name, load_balancer_name)
+      capify_ec2.register_instance_in_elb(instance_name, load_balancer_name)
     end
 
     task :date do
@@ -28,13 +32,13 @@ Capistrano::Configuration.instance(:must_exist).load do
 
     desc "Prints list of ec2 server names"
     task :server_names do
-      puts CapifyEc2.new.server_names.sort
+      puts capify_ec2.server_names.sort
     end
     
     desc "Allows ssh to instance by id. cap ssh <INSTANCE NAME>"
     task :ssh do
       server = variables[:logger].instance_variable_get("@options")[:actions][1]
-      instance = numeric?(server) ? CapifyEc2.new.desired_instances[server.to_i] : CapifyEc2.new.get_instance_by_name(server)
+      instance = numeric?(server) ? capify_ec2.desired_instances[server.to_i] : capify_ec2.get_instance_by_name(server)
       port = ssh_options[:port] || 22 
       command = "ssh -p #{port} #{user}@#{instance.contact_point}"
       puts "Running `#{command}`"
@@ -49,9 +53,8 @@ Capistrano::Configuration.instance(:must_exist).load do
   end
     
   def ec2_roles(*roles)
-    @capify_ec2 = CapifyEc2.new
     server_name = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
-    named_instance = @capify_ec2.get_instance_by_name(server_name)
+    named_instance = capify_ec2.get_instance_by_name(server_name)
     
     task named_instance.name.to_sym do
       remove_default_roles
@@ -68,13 +71,13 @@ Capistrano::Configuration.instance(:must_exist).load do
     role = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
     @roles[role[:name]]
     
-    instances = @capify_ec2.get_instances_by_role(role[:name])
+    instances = capify_ec2.get_instances_by_role(role[:name])
     if role[:options].delete(:default)
       instances.each do |instance|
         define_role(role, instance)
       end
     end    
-    regions = @capify_ec2.determine_regions
+    regions = capify_ec2.determine_regions
     regions.each do |region|
       define_regions(region, role)
     end unless regions.nil?
@@ -87,7 +90,7 @@ Capistrano::Configuration.instance(:must_exist).load do
   def define_regions(region, role)
     instances = []
     @roles.each do |role_name, junk|
-      region_instances = @capify_ec2.get_instances_by_region(role_name, region)
+      region_instances = capify_ec2.get_instances_by_region(role_name, region)
       region_instances.each {|instance| instances << instance} unless region_instances.nil?
     end
     task region.to_sym do
