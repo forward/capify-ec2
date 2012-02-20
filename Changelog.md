@@ -1,10 +1,20 @@
-## 1.2.5 (Jan 26, 2011)
+## 1.2.6 (Jan 29, 2012)
+
+Notes:
+
+  - Minor refactoring to make the code clearer
+  
+Bugfixes:
+
+  - Documentation showed whitespaces in Options and Roles, but they weren't supported in the code. (Thanks ennui2342)
+
+## 1.2.5 (Jan 26, 2012)
 
 Features:
 
   - Added ability to connect to VPC instances. Very basic functionality.
 
-## 1.2.4 (Jan 24, 2011)
+## 1.2.4 (Jan 24, 2012)
 
 Features:
 

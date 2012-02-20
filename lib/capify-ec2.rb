@@ -9,8 +9,16 @@ class CapifyEc2
   attr_accessor :load_balancer, :instances
   SLEEP_COUNT = 5
   
-  def initialize()
-    @ec2_config = YAML.load(File.new("config/ec2.yml"))
+  def initialize(ec2_config = "config/ec2.yml")
+    case ec2_config
+    when Hash
+      @ec2_config = ec2_config
+    when String
+      @ec2_config = YAML.load_file ec2_config
+    else
+      raise ArgumentError, "Invalid ec2_config: #{ec2_config.inspect}"
+    end
+
     regions = determine_regions()
     
     @instances = []
@@ -48,7 +56,7 @@ class CapifyEc2
   end
  
   def get_instances_by_role(role)
-    desired_instances.select {|instance| instance.tags['Roles'].split(',').include?(role.to_s) rescue false}
+    desired_instances.select {|instance| instance.tags['Roles'].split(%r{\W+}).include?(role.to_s) rescue false}
   end
   
   def get_instances_by_region(roles, region)

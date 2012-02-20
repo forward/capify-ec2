@@ -7,9 +7,9 @@ capify-ec2 is used to generate capistrano namespaces using ec2 tags.
 
 eg: If you have three servers on amazon's ec2.
 
-    server-1 Tag: Roles => "web", Options => "cron, resque"
+    server-1 Tag: Roles => "web", Options => "cron,resque"
     server-2 Tag: Roles => "db"
-    server-3 Tag: Roles => "web, db"
+    server-3 Tag: Roles => "web,db"
 
 Installing
 
