@@ -1,6 +1,6 @@
 [![Dependency Status](https://gemnasium.com/jravetch/capify-ec2.png)](https://gemnasium.com/jravetch/capify-ec2)
 
-Capify Ec2
+Capify EC2
 ====================================================
 
 capify-ec2 is used to generate capistrano namespaces using ec2 tags.
