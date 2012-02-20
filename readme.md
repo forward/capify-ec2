@@ -1,3 +1,5 @@
+[![Dependency Status](https://gemnasium.com/jravetch/capify-ec2.png)](https://gemnasium.com/jravetch/capify-ec2)
+
 Capify Ec2
 ====================================================
 
