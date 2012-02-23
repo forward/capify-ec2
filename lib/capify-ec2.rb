@@ -37,10 +37,11 @@ class CapifyEc2
   
   def display_instances
     desired_instances.each_with_index do |instance, i|
-      puts sprintf "%-11s:   %-40s %-20s %-20s %-62s %-20s (%s)",
+      puts sprintf "%-11s:   %-40s %-20s %-20s %-62s %-20s (%s) (%s)",
         i.to_s.magenta, instance.name, instance.id.red, instance.flavor_id.cyan,
-        instance.contact_point.blue, instance.availability_zone.green, (instance.tags["Roles"] || "").yellow
-    end
+        instance.contact_point.blue, instance.availability_zone.green, (instance.tags["Roles"] || "").yellow,
+        (instance.tags["Options"] || "").yellow
+      end
   end
 
   def server_names
