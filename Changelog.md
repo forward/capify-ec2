@@ -1,4 +1,4 @@
-## 1.2.6 (Jan 29, 2012)
+## 1.2.6 (Feb 29, 2012)
 
 Notes:
 
@@ -7,6 +7,7 @@ Notes:
 Bugfixes:
 
   - Documentation showed whitespaces in Options and Roles, but they weren't supported in the code. (Thanks ennui2342)
+  - Options set on roles were being ignored. Tested with no_release
 
 ## 1.2.5 (Jan 26, 2012)
 
