@@ -57,7 +57,7 @@ class CapifyEc2
   end
  
   def get_instances_by_role(role)
-    desired_instances.select {|instance| instance.tags['Roles'].split(%r{\W+}).include?(role.to_s) rescue false}
+    desired_instances.select {|instance| instance.tags['Roles'].split(%r{[, ]+}).include?(role.to_s) rescue false}
   end
   
   def get_instances_by_region(roles, region)
