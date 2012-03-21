@@ -72,7 +72,7 @@ will run the date command on all server's tagged with the web role
 Running
 
 ```ruby
-cap server-1 ec2:register-instance -s loadbalancer=elb-1
+cap server-1 ec2:register_instance -s loadbalancer=elb-1
 ```
 
 will register server-1 to be used by elb-1
@@ -80,7 +80,7 @@ will register server-1 to be used by elb-1
 Running
 
 ```ruby
-cap server-1 ec2:deregister-instance
+cap server-1 ec2:deregister_instance
 ```
 
 will remove server-1 from whatever instance it is currently
