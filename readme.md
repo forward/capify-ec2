@@ -64,7 +64,7 @@ end
 Running
 
 ```ruby
-cap web date
+cap web ec2:date
 ```
 
 will run the date command on all server's tagged with the web role
