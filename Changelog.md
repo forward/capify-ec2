@@ -1,12 +1,12 @@
-## 1.2.6 (Mar 06, 2012)
+## 1.2.6 (May 16, 2012)
 
 Notes:
 
   - Minor refactoring to make the code clearer
+  - Updated code to allow commas and any amount of whitespace between options and roles (Thanks ennui2342)
+  - Updated documentation to reflect multiple correct formats.
   
 Bugfixes:
-
-  - Documentation showed whitespaces in Options and Roles, but they weren't supported in the code. (Thanks ennui2342)
 
 ## 1.2.5 (Jan 26, 2012)
 
