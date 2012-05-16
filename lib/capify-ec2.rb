@@ -53,7 +53,7 @@ class CapifyEc2
   end
   
   def desired_instances(region = nil)
-    instances = @ec2_config[:project_tag].nil? ? @instances : project_instances
+    @ec2_config[:project_tag].nil? ? @instances : project_instances
   end
  
   def get_instances_by_role(role)
