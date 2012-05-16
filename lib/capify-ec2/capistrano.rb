@@ -124,8 +124,9 @@ Capistrano::Configuration.instance(:must_exist).load do
     new_options = {}
     options.each {|key, value| new_options[key] = true if value.to_s == instance.name}
     instance.tags["Options"].split(%r{,\s*}).each { |option| new_options[option.to_sym] = true} rescue false
-
+    
     if new_options
+      p new_options
       role role[:name].to_sym, instance.contact_point, new_options 
     else
       role role[:name].to_sym, instance.contact_point
