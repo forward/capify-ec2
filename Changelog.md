@@ -1,4 +1,10 @@
-## 1.2.6 (May 16, 2012)
+## 1.2.9 (June 27, 2012)
+
+Bugfixes:
+
+  - No longer throws an error when a server has no name.
+
+## 1.2.8 (May 16, 2012)
 
 Notes:
 
