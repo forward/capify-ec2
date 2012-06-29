@@ -54,16 +54,19 @@ Capistrano::Configuration.instance(:must_exist).load do
     
   def ec2_roles(*roles)
     server_name = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
-    named_instance = capify_ec2.get_instance_by_name(server_name)
+    p server_name
     
-    task named_instance.name.to_sym do
-      remove_default_roles
-      server_address = named_instance.contact_point
-      named_instance.roles.each do |role|
-        define_role({:name => role, :options => {:on_no_matching_servers => :continue}}, named_instance)
-      end
-    end unless named_instance.nil?
-    
+    if !server_name.nil?
+      named_instance = capify_ec2.get_instance_by_name(server_name)
+  
+      task named_instance.name.to_sym do
+        remove_default_roles
+        server_address = named_instance.contact_point
+        named_instance.roles.each do |role|
+          define_role({:name => role, :options => {:on_no_matching_servers => :continue}}, named_instance)
+        end
+      end unless named_instance.nil?
+    end
     roles.each {|role| ec2_role(role)}
   end
   
