@@ -15,6 +15,10 @@ class CapifyEc2
       @ec2_config = ec2_config
     when String
       @ec2_config = YAML.load_file ec2_config
+      
+      # Maintain backward compatibility with previous config format
+      @ec2_config[:project_tags] ||= []
+      @ec2_config[:project_tags] << @ec2_config[:project_tag] if @ec2_config[:project_tag]
     else
       raise ArgumentError, "Invalid ec2_config: #{ec2_config.inspect}"
     end
@@ -49,11 +53,11 @@ class CapifyEc2
   end
     
   def project_instances
-    @instances.select {|instance| instance.tags["Project"] == @ec2_config[:project_tag]}
+    @instances.select {|instance| @ec2_config[:project_tags].include?(instance.tags["Project"])}
   end
   
   def desired_instances(region = nil)
-    @ec2_config[:project_tag].nil? ? @instances : project_instances
+    @ec2_config[:project_tags].empty? ? @instances : project_instances
   end
  
   def get_instances_by_role(role)
