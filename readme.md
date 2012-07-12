@@ -180,7 +180,13 @@ health.
 
 The :project_tag parameter is optional. It will limit any commands to
 running against those instances with a "Project" tag set to the value
-"YOUR APP NAME".
+"YOUR APP NAME". It is also possible to apply commands to multiple projects using the :project_tags parameter, like so: 
+
+```ruby
+:project_tags: 
+ - "YOUR APP NAME"
+ - "YOUR OTHER APP NAME"
+```
 
 ## Development
 
