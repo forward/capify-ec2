@@ -18,6 +18,8 @@ class CapifyEc2
       
       # Maintain backward compatibility with previous config format
       @ec2_config[:project_tags] ||= []
+      # User can change the Roles tag string
+      @ec2_config[:aws_roles_tag] ||= "Roles"
       @ec2_config[:project_tags] << @ec2_config[:project_tag] if @ec2_config[:project_tag]
     else
       raise ArgumentError, "Invalid ec2_config: #{ec2_config.inspect}"
@@ -43,7 +45,7 @@ class CapifyEc2
     desired_instances.each_with_index do |instance, i|
       puts sprintf "%02d:  %-40s  %-20s  %-20s  %-62s  %-20s  (%s)  (%s)",
         i, (instance.name || "").green, instance.id.red, instance.flavor_id.cyan,
-        instance.contact_point.blue, instance.availability_zone.magenta, (instance.tags["Roles"] || "").yellow,
+        instance.contact_point.blue, instance.availability_zone.magenta, (instance.tags[@ec2_config[:aws_roles_tag]] || "").yellow,
         (instance.tags["Options"] || "").yellow
       end
   end
@@ -61,7 +63,7 @@ class CapifyEc2
   end
  
   def get_instances_by_role(role)
-    desired_instances.select {|instance| instance.tags['Roles'].split(%r{,\s*}).include?(role.to_s) rescue false}
+    desired_instances.select {|instance| instance.tags[@ec2_config[:aws_roles_tag]].split(%r{,\s*}).include?(role.to_s) rescue false}
   end
   
   def get_instances_by_region(roles, region)
