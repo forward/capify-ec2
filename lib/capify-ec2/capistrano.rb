@@ -61,7 +61,14 @@ Capistrano::Configuration.instance(:must_exist).load do
       task named_instance.name.to_sym do
         remove_default_roles
         server_address = named_instance.contact_point
-        named_instance.roles.each do |role|
+
+        if named_instance.respond_to?(:roles)
+          roles = named_instance.roles
+        else
+          roles = [named_instance.tags["Roles"]].flatten
+        end    
+        
+        roles.each do |role|
           define_role({:name => role, :options => {:on_no_matching_servers => :continue}}, named_instance)
         end
       end unless named_instance.nil?
@@ -142,5 +149,4 @@ Capistrano::Configuration.instance(:must_exist).load do
     roles.reject! { true }
   end
   
-
 end
