@@ -55,8 +55,8 @@ Capistrano::Configuration.instance(:must_exist).load do
   def ec2_roles(*roles)
     server_name = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
     
-    if !server_name.nil?
-      named_instance = capify_ec2.get_instance_by_name(server_name) || ""
+    if !server_name.nil? && !server_name.empty?
+      named_instance = capify_ec2.get_instance_by_name(server_name)
   
       task named_instance.name.to_sym do
         remove_default_roles
