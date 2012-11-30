@@ -77,9 +77,9 @@ Capistrano::Configuration.instance(:must_exist).load do
   end
   
   def ec2_role(role_name_or_hash)
-    role = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
-    @roles[role[:name]]
-    
+    role      = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
+    variables = role_name_or_hash[:variables] || {}
+        
     instances = capify_ec2.get_instances_by_role(role[:name])
     if role[:options].delete(:default)
       instances.each do |instance|
@@ -91,9 +91,8 @@ Capistrano::Configuration.instance(:must_exist).load do
       define_regions(region, role)
     end unless regions.nil?
 
-    define_role_roles(role, instances)
-    define_instance_roles(role, instances)    
-
+    define_role_roles(role, instances, variables)
+    define_instance_roles(role, instances, variables)
   end  
 
   def define_regions(region, role)
@@ -110,35 +109,37 @@ Capistrano::Configuration.instance(:must_exist).load do
     end
   end
 
-  def define_instance_roles(role, instances)
+  def define_instance_roles(role, instances, variables)
     instances.each do |instance|
       task instance.name.to_sym do
         remove_default_roles
-        define_role(role, instance)
+        define_role(role, instance, variables)
       end
     end
   end
 
-  def define_role_roles(role, instances)
+  def define_role_roles(role, instances, variables)
     task role[:name].to_sym do
       remove_default_roles
       instances.each do |instance|
-        define_role(role, instance)
+        define_role(role, instance, variables)
       end
     end 
   end
 
-  def define_role(role, instance)
-    options = role[:options]
-    new_options = {}
-    options.each {|key, value| new_options[key] = true if value.to_s == instance.name}
-    instance.tags["Options"].split(%r{,\s*}).each { |option| new_options[option.to_sym] = true} rescue false
+  def define_role(role, instance, variables)
+    options     = role[:options] || {}
     
-    if new_options
-      role role[:name].to_sym, instance.contact_point, new_options 
-    else
-      role role[:name].to_sym, instance.contact_point
-    end
+    cap_options = options.inject({}) do |cap_options, (key, value)| 
+      cap_options[key] = true if value.to_s == instance.name
+      cap_options
+    end 
+    
+    ec2_options = instance.tags["Options"] || ""
+    ec2_options.split(%r{,\s*}).compact.each { |ec2_option|  cap_options[ec2_option.to_sym] = true }
+    
+    variables.each { |name, value| set name, value }
+    role role[:name].to_sym, instance.contact_point, cap_options
   end
   
   def numeric?(object)
