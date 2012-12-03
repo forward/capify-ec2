@@ -128,7 +128,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     end 
   end
 
-  def define_role(role, instance, variables)
+  def define_role(role, instance, variables={})
     options     = role[:options] || {}
     
     cap_options = options.inject({}) do |cap_options, (key, value)| 
