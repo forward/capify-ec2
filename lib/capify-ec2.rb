@@ -68,7 +68,7 @@ class CapifyEc2
   
   def get_instances_by_region(roles, region)
     return unless region
-    desired_instances.select {|instance| instance.availability_zone.match(region) && instance.roles == roles.to_s rescue false}
+    desired_instances.select {|instance| instance.availability_zone.match(region) && instance.tags['Roles'].split(%r{,\s*}).include?(roles.to_s) rescue false}
   end 
   
   def get_instance_by_name(name)
