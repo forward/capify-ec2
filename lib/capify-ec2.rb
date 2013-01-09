@@ -7,7 +7,10 @@ require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
 class CapifyEc2
 
   attr_accessor :load_balancer, :instances
-  SLEEP_COUNT = 5
+  
+  unless const_defined? :SLEEP_COUNT
+    SLEEP_COUNT = 5
+  end
   
   def initialize(ec2_config = "config/ec2.yml")
     case ec2_config
@@ -42,6 +45,7 @@ class CapifyEc2
   end
     
   def display_instances
+    puts SLEEP_COUNT
     desired_instances.each_with_index do |instance, i|
       puts sprintf "%02d:  %-40s  %-20s  %-20s  %-62s  %-20s  (%s)  (%s)",
         i, (instance.name || "").green, instance.id.red, instance.flavor_id.cyan,
