@@ -45,13 +45,38 @@ class CapifyEc2
   end
     
   def display_instances
-    puts SLEEP_COUNT
+    # Set minimum widths for the variable length instance attributes.
+    column_widths = { :name_min => 4, :type_min => 4, :dns_min => 5, :roles_min => 5, :options_min => 6 }
+
+    # Find the longest attribute across all instances, to format the columns properly.
+    column_widths[:name]    = desired_instances.map{|i| i.name                              || ' ' * column_widths[:name_min]    }.max_by(&:length).length
+    column_widths[:type]    = desired_instances.map{|i| i.flavor_id                         || ' ' * column_widths[:type_min]    }.max_by(&:length).length
+    column_widths[:dns]     = desired_instances.map{|i| i.contact_point                     || ' ' * column_widths[:dns_min]     }.max_by(&:length).length
+    column_widths[:roles]   = desired_instances.map{|i| i.tags[@ec2_config[:aws_roles_tag]] || ' ' * column_widths[:roles_min]   }.max_by(&:length).length
+    column_widths[:options] = desired_instances.map{|i| i.tags["Options"]                   || ' ' * column_widths[:options_min] }.max_by(&:length).length
+
+    # Title row.
+    puts sprintf "%-3s   %s   %s   %s   %s   %s   %s   %s", 
+      '',
+      'Name'   .ljust( column_widths[:name]    ).bold,
+      'ID'     .ljust( 10                      ).bold,
+      'Type'   .ljust( column_widths[:type]    ).bold,
+      'DNS'    .ljust( column_widths[:dns]     ).bold,
+      'Zone'   .ljust( 10                      ).bold,
+      'Roles'  .ljust( column_widths[:roles]   ).bold,
+      'Options'.ljust( column_widths[:options] ).bold
+
     desired_instances.each_with_index do |instance, i|
-      puts sprintf "%02d:  %-40s  %-20s  %-20s  %-62s  %-20s  (%s)  (%s)",
-        i, (instance.name || "").green, instance.id.red, instance.flavor_id.cyan,
-        instance.contact_point.blue, instance.availability_zone.magenta, (instance.tags[@ec2_config[:aws_roles_tag]] || "").yellow,
-        (instance.tags["Options"] || "").yellow
-      end
+      puts sprintf "%02d:   %-10s   %s   %s   %s   %-10s   %s   %s",
+        i, 
+        (instance.name || '')                             .ljust( column_widths[:name]    ).green,
+        instance.id                                       .ljust( 2                       ).red,
+        instance.flavor_id                                .ljust( column_widths[:type]    ).cyan,
+        instance.contact_point                            .ljust( column_widths[:dns]     ).blue.bold,
+        instance.availability_zone                        .ljust( 10                      ).magenta,
+        (instance.tags[@ec2_config[:aws_roles_tag]] || '').ljust( column_widths[:roles]   ).yellow,
+        (instance.tags["Options"] || '')                  .ljust( column_widths[:options] ).yellow
+    end
   end
 
   def server_names
