@@ -1,3 +1,18 @@
+## 1.3.5 (Jan 11, 2013)
+
+Features:
+
+  - Updated output from ec2:status, improving readability, and improving handling of instance attributes that vary in size.
+
+Bugfixes:
+
+  - Region role creation fixed, so that you can deploy just to instances in specific regions again (i.e. cap us-east-1 deploy).
+  - Fixed 'already initialized constant' warning which may be shown to users running some versions of Ruby 1.8.
+
+## 1.3.0 to 1.3.4
+
+Sorry, release notes were not added for these versions.
+
 ## 1.2.9 (June 29, 2012)
 
 Bugfixes:
