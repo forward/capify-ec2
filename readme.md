@@ -1,8 +1,3 @@
-Capify Ec2 is no longer being maintained. It has been superseded by capify-cloud, which adds Brightbox integration.
-You may continue to use this as long as you like, but active development and gems will now be found under the capify-cloud moniker.
-https://github.com/forward/capify-cloud
-
-
 Capify Ec2
 ====================================================
 
