@@ -1,5 +1,6 @@
 require File.join(File.dirname(__FILE__), '../capify-ec2')
 require 'colored'
+require 'pp'
 
 Capistrano::Configuration.instance(:must_exist).load do  
   def capify_ec2
@@ -45,13 +46,59 @@ Capistrano::Configuration.instance(:must_exist).load do
       exec(command)
     end
   end
-  
+
   namespace :deploy do
     before "deploy", "ec2:deregister_instance"
     after "deploy", "ec2:register_instance"
     after "deploy:rollback", "ec2:register_instance"
   end
     
+  desc "Deploy to servers one at a time."
+  task :rolling_deploy do
+    p roles
+    puts "[Capify-EC2] Performing rolling deploy to servers one at a time..."
+
+    deploy_targets = {}
+
+    roles.each do |role|
+      deploy_targets[ role[0] ] = []
+      role[1].servers.each do |s|
+        deploy_targets[ role[0] ] << s.to_s
+      end
+    end
+
+    puts "Capistrano would normally deploy to all of these now... #{deploy_targets.inspect}"
+
+    deploy_targets.each_pair do |a_role,servers|
+      puts "[Capify-EC2] Processing role: #{a_role}"
+      roles.clear
+      servers.each do |server|
+        # puts capify_ec2.desired_instances.inspect
+
+        test = capify_ec2.desired_instances.select {|instance| instance.dns_name == server}
+        test = test.empty? ? '' : (test.first.tags['Name'] || '')
+  
+        puts "***** processing node #{test} *****"
+
+        # capify_ec2.desired_instances.each_with_index do |instance, i|
+        #   puts instance.inspect
+        # end
+
+        roles[a_role].clear
+        role a_role, server
+        puts "[Capify-EC2] #{roles}"
+        run "hostname"
+      end
+    end
+
+    # target_instances.each do |server|
+    #   puts "Deploying to #{server}"
+
+    # end
+
+
+  end
+
   def ec2_roles(*roles)
     server_name = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
     
