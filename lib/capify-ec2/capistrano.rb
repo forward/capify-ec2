@@ -75,10 +75,10 @@ Capistrano::Configuration.instance(:must_exist).load do
       servers.each do |server|
         # puts capify_ec2.desired_instances.inspect
 
-        test = capify_ec2.desired_instances.select {|instance| instance.dns_name == server}
-        test = test.empty? ? '' : (test.first.tags['Name'] || '')
+        current_node_name = capify_ec2.desired_instances.select {|instance| instance.dns_name == server}
+        current_node_name = current_node_name.empty? ? '' : (current_node_name.first.tags['Name'] || '')
   
-        puts "***** processing node #{test} *****"
+        puts "***** processing node #{current_node_name} *****"
 
         # capify_ec2.desired_instances.each_with_index do |instance, i|
         #   puts instance.inspect
@@ -88,6 +88,7 @@ Capistrano::Configuration.instance(:must_exist).load do
         role a_role, server
         puts "[Capify-EC2] #{roles}"
         run "hostname"
+
       end
     end
 
