@@ -61,8 +61,10 @@ Capistrano::Configuration.instance(:must_exist).load do
     deploy_targets = {}
 
     roles.each do |role|
+      p role.inspect
       deploy_targets[ role[0] ] = []
       role[1].servers.each do |s|
+        pp s.inspect
         deploy_targets[ role[0] ] << s.to_s
       end
     end
@@ -74,6 +76,8 @@ Capistrano::Configuration.instance(:must_exist).load do
       roles.clear
       servers.each do |server|
         # puts capify_ec2.desired_instances.inspect
+
+        # puts "hello there #{server.name}"
 
         current_node_name = capify_ec2.desired_instances.select {|instance| instance.dns_name == server}
         current_node_name = current_node_name.empty? ? '' : (current_node_name.first.tags['Name'] || '')
@@ -87,7 +91,13 @@ Capistrano::Configuration.instance(:must_exist).load do
         roles[a_role].clear
         role a_role, server
         puts "[Capify-EC2] #{roles}"
-        run "hostname"
+        # puts roles[:options].inspect
+        # puts variables[:logger].instance_variable_get("@options")
+        # # puts options.inspect
+        # puts ryantest
+        pp server.inspect
+        # puts fetch(:healthcheck) rescue "inproduction"
+        # run "hostname"
 
       end
     end
@@ -129,7 +139,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     variables = role_name_or_hash[:variables] || {}
         
     instances = capify_ec2.get_instances_by_role(role[:name])
-
+    
     if role[:options] && role[:options].delete(:default)
       instances.each do |instance|
         define_role(role, instance)
@@ -179,11 +189,19 @@ Capistrano::Configuration.instance(:must_exist).load do
   def define_role(role, instance, variables = {})
     options     = role[:options] || {}
     
+puts options.inspect
+
     cap_options = options.inject({}) do |cap_options, (key, value)| 
+      puts key
+      puts value
       cap_options[key] = true if value.to_s == instance.name
+      cap_options[key] = value if key == :healthcheck
       cap_options
     end 
     
+puts cap_options.inspect
+puts "---"
+
     ec2_options = instance.tags["Options"] || ""
     ec2_options.split(%r{,\s*}).compact.each { |ec2_option|  cap_options[ec2_option.to_sym] = true }
     

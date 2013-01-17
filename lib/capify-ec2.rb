@@ -165,4 +165,9 @@ class CapifyEc2
       STDERR.puts "#{instance.name}: tests timed out after #{time_elapsed} seconds."
     end
   end
+
+  def instance_health_by_url(url)
+    uri = URI('')
+    Net::HTTP.get(uri) # => String
+  end
 end
