@@ -18,7 +18,7 @@ class CapifyEc2
       @ec2_config = ec2_config
     when String
       @ec2_config = YAML.load_file ec2_config
-      
+
       # Maintain backward compatibility with previous config format
       @ec2_config[:project_tags] ||= []
       # User can change the Roles tag string
@@ -49,11 +49,11 @@ class CapifyEc2
     column_widths = { :name_min => 4, :type_min => 4, :dns_min => 5, :roles_min => 5, :options_min => 6 }
 
     # Find the longest attribute across all instances, to format the columns properly.
-    column_widths[:name]    = desired_instances.map{|i| i.name                              || ' ' * column_widths[:name_min]    }.max_by(&:length).length
-    column_widths[:type]    = desired_instances.map{|i| i.flavor_id                         || ' ' * column_widths[:type_min]    }.max_by(&:length).length
-    column_widths[:dns]     = desired_instances.map{|i| i.contact_point                     || ' ' * column_widths[:dns_min]     }.max_by(&:length).length
-    column_widths[:roles]   = desired_instances.map{|i| i.tags[@ec2_config[:aws_roles_tag]] || ' ' * column_widths[:roles_min]   }.max_by(&:length).length
-    column_widths[:options] = desired_instances.map{|i| i.tags["Options"]                   || ' ' * column_widths[:options_min] }.max_by(&:length).length
+    column_widths[:name]    = desired_instances.map{|i| i.name.to_s.ljust( column_widths[:name_min] )                               || ' ' * column_widths[:name_min]    }.max_by(&:length).length
+    column_widths[:type]    = desired_instances.map{|i| i.flavor_id                                                                 || ' ' * column_widths[:type_min]    }.max_by(&:length).length
+    column_widths[:dns]     = desired_instances.map{|i| i.contact_point.to_s.ljust( column_widths[:dns_min] )                       || ' ' * column_widths[:dns_min]     }.max_by(&:length).length
+    column_widths[:roles]   = desired_instances.map{|i| i.tags[@ec2_config[:aws_roles_tag]].to_s.ljust( column_widths[:roles_min] ) || ' ' * column_widths[:roles_min]   }.max_by(&:length).length
+    column_widths[:options] = desired_instances.map{|i| i.tags["Options"].to_s.ljust( column_widths[:options_min] )                 || ' ' * column_widths[:options_min] }.max_by(&:length).length
 
     # Title row.
     puts sprintf "%-3s   %s   %s   %s   %s   %s   %s   %s", 
