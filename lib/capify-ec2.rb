@@ -18,16 +18,16 @@ class CapifyEc2
       @ec2_config = ec2_config
     when String
       @ec2_config = YAML.load_file ec2_config
-      
-      # Maintain backward compatibility with previous config format
-      @ec2_config[:project_tags] ||= []
-      # User can change the Roles tag string
-      @ec2_config[:aws_roles_tag] ||= "Roles"
-      @ec2_config[:project_tags] << @ec2_config[:project_tag] if @ec2_config[:project_tag]
     else
       raise ArgumentError, "Invalid ec2_config: #{ec2_config.inspect}"
     end
 
+    # Maintain backward compatibility with previous config format
+    @ec2_config[:project_tags] ||= []
+    # User can change the Roles tag string
+    @ec2_config[:aws_roles_tag] ||= "Roles"
+    @ec2_config[:project_tags] << @ec2_config[:project_tag] if @ec2_config[:project_tag]
+    
     regions = determine_regions()
     
     @instances = []
