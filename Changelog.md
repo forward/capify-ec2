@@ -1,3 +1,9 @@
+## 1.3.6 (Jan 17, 2013)
+
+Bugfixes:
+
+  - Fix ec2:status alignment issues when the column contents are smaller than the column headings.
+
 ## 1.3.5 (Jan 11, 2013)
 
 Features:
