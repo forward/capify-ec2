@@ -78,7 +78,7 @@ Capistrano::Configuration.instance(:must_exist).load do
   
   def ec2_role(role_name_or_hash)
     role      = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
-    variables = role_name_or_hash[:variables] || {}
+    variables = role[:variables] || {}
         
     instances = capify_ec2.get_instances_by_role(role[:name])
 
