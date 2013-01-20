@@ -77,23 +77,22 @@ Capistrano::Configuration.instance(:must_exist).load do
   end
   
   def ec2_role(role_name_or_hash)
-    role      = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash,:options => {}}
-    variables = role_name_or_hash[:variables] || {}
+    role = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash, :options => {}, :variables => {}}
         
     instances = capify_ec2.get_instances_by_role(role[:name])
-
     if role[:options] && role[:options].delete(:default)
       instances.each do |instance|
         define_role(role, instance)
       end
-    end    
+    end
+
     regions = capify_ec2.determine_regions
     regions.each do |region|
       define_regions(region, role)
     end unless regions.nil?
 
-    define_role_roles(role, instances, variables)
-    define_instance_roles(role, instances, variables)
+    define_role_roles(role, instances)
+    define_instance_roles(role, instances)
   end  
 
   def define_regions(region, role)
@@ -110,26 +109,27 @@ Capistrano::Configuration.instance(:must_exist).load do
     end
   end
 
-  def define_instance_roles(role, instances, variables)
+  def define_instance_roles(role, instances)
     instances.each do |instance|
       task instance.name.to_sym do
         remove_default_roles
-        define_role(role, instance, variables)
+        define_role(role, instance)
       end
     end
   end
 
-  def define_role_roles(role, instances, variables)
+  def define_role_roles(role, instances)
     task role[:name].to_sym do
       remove_default_roles
       instances.each do |instance|
-        define_role(role, instance, variables)
+        define_role(role, instance)
       end
     end 
   end
 
-  def define_role(role, instance, variables = {})
+  def define_role(role, instance)
     options     = role[:options] || {}
+    variables   = role[:variables] || {}
     
     cap_options = options.inject({}) do |cap_options, (key, value)| 
       cap_options[key] = true if value.to_s == instance.name
@@ -139,7 +139,8 @@ Capistrano::Configuration.instance(:must_exist).load do
     ec2_options = instance.tags["Options"] || ""
     ec2_options.split(%r{,\s*}).compact.each { |ec2_option|  cap_options[ec2_option.to_sym] = true }
     
-    variables.each { |name, value| set name, value }
+    variables.each { |key, value| set key, value }
+
     role role[:name].to_sym, instance.contact_point, cap_options
   end
   
