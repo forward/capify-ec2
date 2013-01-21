@@ -55,17 +55,14 @@ Capistrano::Configuration.instance(:must_exist).load do
     
   desc "Deploy to servers one at a time."
   task :rolling_deploy do
-    p roles
     puts "[Capify-EC2] Performing rolling deploy to servers one at a time..."
 
     deploy_targets = {}
 
     roles.each do |role|
-      p role.inspect
       deploy_targets[ role[0] ] = []
       role[1].servers.each do |s|
-        pp s.inspect
-        deploy_targets[ role[0] ] << s.to_s
+        deploy_targets[ role[0] ] << { :dns => s.host.to_s, :options => s.options }
       end
     end
 
@@ -74,40 +71,22 @@ Capistrano::Configuration.instance(:must_exist).load do
     deploy_targets.each_pair do |a_role,servers|
       puts "[Capify-EC2] Processing role: #{a_role}"
       roles.clear
+
+      max_dns_width = servers.map{|s| server[:dns] }.max_by(&:length).length
+
       servers.each do |server|
-        # puts capify_ec2.desired_instances.inspect
 
-        # puts "hello there #{server.name}"
-
-        current_node_name = capify_ec2.desired_instances.select {|instance| instance.dns_name == server}
-        current_node_name = current_node_name.empty? ? '' : (current_node_name.first.tags['Name'] || '')
-  
-        puts "***** processing node #{current_node_name} *****"
-
-        # capify_ec2.desired_instances.each_with_index do |instance, i|
-        #   puts instance.inspect
-        # end
+        current_node_name = capify_ec2.desired_instances.select { |instance| instance.dns_name == server[:dns] }
+        unless current_node_name.empty?
+          current_node_name = current_node_name.first.tags['Name'] ? "(#{current_node_name.first.tags['Name']})" : ''
+        end
 
         roles[a_role].clear
         role a_role, server
-        puts "[Capify-EC2] #{roles}"
-        # puts roles[:options].inspect
-        # puts variables[:logger].instance_variable_get("@options")
-        # # puts options.inspect
-        # puts ryantest
-        pp server.inspect
-        # puts fetch(:healthcheck) rescue "inproduction"
-        # run "hostname"
 
+        puts "[Capify-EC2] Deploying to #{server[:dns]} #{current_node_name}"
       end
     end
-
-    # target_instances.each do |server|
-    #   puts "Deploying to #{server}"
-
-    # end
-
-
   end
 
   def ec2_roles(*roles)
