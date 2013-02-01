@@ -166,8 +166,26 @@ class CapifyEc2
     end
   end
 
-  def instance_health_by_url(url)
-    uri = URI('')
-    Net::HTTP.get(uri) # => String
+  def instance_health_by_url(dns, port, path, expected_response, options = {})
+    protocol = options[:https] ? 'https://' : 'http://'
+    uri = URI("#{protocol}#{dns}:#{port}#{path}")
+    http = Net::HTTP.new(uri.host, uri.port)
+
+    result = nil
+
+    begin
+      Timeout::timeout(options[:timeout]) do
+        begin
+          result = http.get(uri.path)
+          raise "Server responded with '#{result.body}', expected '#{expected_response}'" unless result.body == expected_response
+        rescue => e
+          puts "[Capify-EC2] Unexpected response: #{e}..."
+          sleep 1
+          retry
+        end
+      end
+    rescue Timeout::Error => e
+    end
+    result ? result.body == expected_response : false
   end
 end

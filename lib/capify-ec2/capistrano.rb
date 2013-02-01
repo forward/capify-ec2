@@ -72,7 +72,7 @@ Capistrano::Configuration.instance(:must_exist).load do
       puts "[Capify-EC2] Processing role: #{a_role}"
       roles.clear
 
-      max_dns_width = servers.map{|s| server[:dns] }.max_by(&:length).length
+      # max_dns_width = servers.map{|s| s[:dns] }.max_by(&:length).length
 
       servers.each do |server|
 
@@ -84,7 +84,26 @@ Capistrano::Configuration.instance(:must_exist).load do
         roles[a_role].clear
         role a_role, server
 
-        puts "[Capify-EC2] Deploying to #{server[:dns]} #{current_node_name}"
+        current_server = "#{server[:dns]} #{current_node_name}"
+
+        puts "[Capify-EC2] Beginning deployment to #{current_server}...".yellow.bold
+
+        port              = server[:options][:healthcheck][:port]
+        path              = server[:options][:healthcheck][:path]
+        expected_response = server[:options][:healthcheck][:result]
+        
+        options = {}
+        options[:https]   = server[:options][:healthcheck][:https]   ||= false
+        options[:timeout] = server[:options][:healthcheck][:timeout] ||= 3
+
+        #TODO: Make the healthcheck optional...
+        healthcheck = capify_ec2.instance_health_by_url( server[:dns], port, path, expected_response, options )
+        if healthcheck
+          puts "[Capify-EC2] Deployment successful.".green.bold
+        else
+          puts "[Capify-EC2] Deployment failed!".red.bold
+          raise "Deploy fail"
+        end
       end
     end
   end
