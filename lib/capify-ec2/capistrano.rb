@@ -66,7 +66,7 @@ Capistrano::Configuration.instance(:must_exist).load do
       end
     end
 
-    puts "Capistrano would normally deploy to all of these now... #{deploy_targets.inspect}"
+    # puts "Capistrano would normally deploy to all of these now... #{deploy_targets.inspect}"
 
     deploy_targets.each_pair do |a_role,servers|
       puts "[Capify-EC2] Processing role: #{a_role}"
@@ -74,37 +74,47 @@ Capistrano::Configuration.instance(:must_exist).load do
       roles.clear
 
       servers.each do |server|
-        current_node_name = capify_ec2.desired_instances.select { |instance| instance.dns_name == server[:dns] }
-        unless current_node_name.empty?
-          current_node_name = current_node_name.first.tags['Name'] ? "(#{current_node_name.first.tags['Name']})" : ''
+        current_node = capify_ec2.desired_instances.select { |instance| instance.dns_name == server[:dns] }
+        unless current_node.empty?
+          current_node_name = current_node.first.tags['Name'] ? "(#{current_node.first.tags['Name']})" : ''
         end
 
         roles[a_role].clear
-        role a_role, server
+        role a_role, server[:dns]
 
         current_server = "#{server[:dns]} #{current_node_name}"
-
         puts "[Capify-EC2] Beginning deployment to #{current_server}...".bold
 
-        if server[:options][:healthcheck]
-          options = {}
-          options[:https]   = server[:options][:healthcheck][:https]   ||= false
-          options[:timeout] = server[:options][:healthcheck][:timeout] ||= 30
-          puts "[Capify-EC2] Starting healthcheck..."
-          healthcheck = capify_ec2.instance_health_by_url( server[:dns],
-                                                           server[:options][:healthcheck][:port], 
-                                                           server[:options][:healthcheck][:path], 
-                                                           server[:options][:healthcheck][:result], 
-                                                           options )
-          if healthcheck
-            puts "[Capify-EC2] Deployment successful.".green.bold
-          else
-            puts "[Capify-EC2] Deployment failed!".red.bold
-            raise "Deploy fail"
+        begin
+          # Call the standard 'cap deploy' task with our redefined role containing a single server.
+          top.deploy.default
+
+          if server[:options][:healthcheck]
+            options = {}
+            options[:https]   = server[:options][:healthcheck][:https]   ||= false
+            options[:timeout] = server[:options][:healthcheck][:timeout] ||= 30
+            puts "[Capify-EC2] Starting healthcheck...".bold
+            healthcheck = capify_ec2.instance_health_by_url( server[:dns],
+                                                             server[:options][:healthcheck][:port], 
+                                                             server[:options][:healthcheck][:path], 
+                                                             server[:options][:healthcheck][:result], 
+                                                             options )
+            if healthcheck
+              puts "[Capify-EC2] Deployment successful.".green.bold
+            else
+              puts "[Capify-EC2] Deployment failed!".red.bold
+              raise "Healthcheck timeout exceeded"
+            end
           end
+
+        rescue => e
+          puts "\n[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
+          exit 1
         end
 
-        #TODO: deploy stats on success/fails.    
+
+        #TODO: deploy stats on success/fails.
+        #TODO: don't run the selfdeploy tagging?
       end
     end
   end
