@@ -177,7 +177,7 @@ class CapifyEc2
       Timeout::timeout(options[:timeout]) do
         begin
           result = http.get(uri.path)
-          raise "Server responded with '#{result.body}', expected '#{expected_response}'" unless result.body == expected_response
+          raise "Server responded with '#{result.code}: #{result.body}', expected '#{expected_response}'" unless result.body == expected_response
         rescue => e
           puts "[Capify-EC2] Unexpected response: #{e}..."
           sleep 1
