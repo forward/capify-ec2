@@ -70,12 +70,10 @@ Capistrano::Configuration.instance(:must_exist).load do
 
     deploy_targets.each_pair do |a_role,servers|
       puts "[Capify-EC2] Processing role: #{a_role}"
+      
       roles.clear
 
-      # max_dns_width = servers.map{|s| s[:dns] }.max_by(&:length).length
-
       servers.each do |server|
-
         current_node_name = capify_ec2.desired_instances.select { |instance| instance.dns_name == server[:dns] }
         unless current_node_name.empty?
           current_node_name = current_node_name.first.tags['Name'] ? "(#{current_node_name.first.tags['Name']})" : ''
@@ -86,24 +84,27 @@ Capistrano::Configuration.instance(:must_exist).load do
 
         current_server = "#{server[:dns]} #{current_node_name}"
 
-        puts "[Capify-EC2] Beginning deployment to #{current_server}...".yellow.bold
+        puts "[Capify-EC2] Beginning deployment to #{current_server}...".bold
 
-        port              = server[:options][:healthcheck][:port]
-        path              = server[:options][:healthcheck][:path]
-        expected_response = server[:options][:healthcheck][:result]
-        
-        options = {}
-        options[:https]   = server[:options][:healthcheck][:https]   ||= false
-        options[:timeout] = server[:options][:healthcheck][:timeout] ||= 3
-
-        #TODO: Make the healthcheck optional...
-        healthcheck = capify_ec2.instance_health_by_url( server[:dns], port, path, expected_response, options )
-        if healthcheck
-          puts "[Capify-EC2] Deployment successful.".green.bold
-        else
-          puts "[Capify-EC2] Deployment failed!".red.bold
-          raise "Deploy fail"
+        if server[:options][:healthcheck]
+          options = {}
+          options[:https]   = server[:options][:healthcheck][:https]   ||= false
+          options[:timeout] = server[:options][:healthcheck][:timeout] ||= 30
+          puts "[Capify-EC2] Starting healthcheck..."
+          healthcheck = capify_ec2.instance_health_by_url( server[:dns],
+                                                           server[:options][:healthcheck][:port], 
+                                                           server[:options][:healthcheck][:path], 
+                                                           server[:options][:healthcheck][:result], 
+                                                           options )
+          if healthcheck
+            puts "[Capify-EC2] Deployment successful.".green.bold
+          else
+            puts "[Capify-EC2] Deployment failed!".red.bold
+            raise "Deploy fail"
+          end
         end
+
+        #TODO: deploy stats on success/fails.    
       end
     end
   end
