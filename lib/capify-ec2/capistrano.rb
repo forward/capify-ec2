@@ -35,15 +35,21 @@ Capistrano::Configuration.instance(:must_exist).load do
     task :server_names do
       puts capify_ec2.server_names.sort
     end
-    
+
     desc "Allows ssh to instance by id. cap ssh <INSTANCE NAME>"
     task :ssh do
       server = variables[:logger].instance_variable_get("@options")[:actions][1]
       instance = numeric?(server) ? capify_ec2.desired_instances[server.to_i] : capify_ec2.get_instance_by_name(server)
-      port = ssh_options[:port] || 22 
-      command = "ssh -p #{port} #{user}@#{instance.contact_point}"
-      puts "Running `#{command}`"
-      exec(command)
+
+      if instance and instance.contact_point then
+        port = ssh_options[:port] || 22 
+        command = "ssh -p #{port} #{user}@#{instance.contact_point}"
+        puts "Running `#{command}`"
+        exec(command)
+      else
+        puts "[Capify-EC2] Error: You did not specify the instance number, which can be found via the 'ec2:status' command as follows:".bold.red
+        top.ec2.status
+      end
     end
   end
 

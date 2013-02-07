@@ -57,7 +57,7 @@ class CapifyEc2
 
     # Title row.
     puts sprintf "%-3s   %s   %s   %s   %s   %s   %s   %s", 
-      '',
+      'Num'                                     .bold,
       'Name'   .ljust( column_widths[:name]    ).bold,
       'ID'     .ljust( 10                      ).bold,
       'Type'   .ljust( column_widths[:type]    ).bold,
