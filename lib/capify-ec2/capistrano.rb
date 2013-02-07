@@ -92,7 +92,7 @@ Capistrano::Configuration.instance(:must_exist).load do
           if server[:options][:healthcheck]
             options = {}
             options[:https]   = server[:options][:healthcheck][:https]   ||= false
-            options[:timeout] = server[:options][:healthcheck][:timeout] ||= 30
+            options[:timeout] = server[:options][:healthcheck][:timeout] ||= 60
             puts "[Capify-EC2] Starting healthcheck...".bold
             healthcheck = capify_ec2.instance_health_by_url( server[:dns],
                                                              server[:options][:healthcheck][:port], 
