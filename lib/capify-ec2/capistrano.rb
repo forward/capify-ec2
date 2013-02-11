@@ -63,8 +63,8 @@ Capistrano::Configuration.instance(:must_exist).load do
   task :rolling_deploy do
     puts "[Capify-EC2] Performing rolling deployment..."
 
-    all_servers = {}
-    all_roles   = {}
+    all_servers       = {}
+    all_roles         = {}
 
     roles.each do |role|
       role[1].servers.each do |s|
@@ -75,7 +75,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     end
 
     successful_deploys = []
-
+    failed_deploys     = []
 
     begin
       all_servers.each do |server_dns,server_roles|
@@ -83,27 +83,14 @@ Capistrano::Configuration.instance(:must_exist).load do
         roles.clear
 
         server_roles.each do |a_role|        
-          puts "defining role #{a_role}"
           role a_role, server_dns
         end
-
-      
-        # puts "[Capify-EC2] Processing role: #{server[:role]}"
         
-        
-        
-        current_node = capify_ec2.desired_instances.select { |instance| instance.dns_name == server_dns }
-        unless current_node.empty?
-          current_node_name = current_node.first.tags['Name'] ? "(#{current_node.first.tags['Name']})" : ''
-        end
-
-        
-
-        current_server = "#{server_dns} #{current_node_name}"
-        puts "[Capify-EC2] Beginning deployment to #{current_server} with #{server_roles.count > 1 ? 'roles' : 'role'} '#{server_roles.join(', ')}'...".bold
+        puts "[Capify-EC2] Beginning deployment to #{instance_dns_with_name_tag(server_dns)} with #{server_roles.count > 1 ? 'roles' : 'role'} '#{server_roles.join(', ')}'...".bold
 
         # Call the standard 'cap deploy' task with our redefined role containing a single server.
         # top.deploy.default
+
         server_roles.each do |a_role|
 
           if all_roles[a_role][:options][:healthcheck]
@@ -120,46 +107,42 @@ Capistrano::Configuration.instance(:must_exist).load do
               puts "[Capify-EC2] Healthcheck for role '#{a_role}' successful.".green.bold
             else
               puts "[Capify-EC2] Healthcheck for role '#{a_role}' failed!".red.bold
-              raise "Healthcheck timeout exceeded"
+              raise CapifyEC2RollingDeployError.new("Healthcheck timeout exceeded", server_dns)
             end
           end
 
         end
-        # if server[:options][:healthcheck]
-        #   options = {}
-        #   options[:https]   = server[:options][:healthcheck][:https]   ||= false
-        #   options[:timeout] = server[:options][:healthcheck][:timeout] ||= 60
-        #   puts "[Capify-EC2] Starting healthcheck..."
-        #   healthcheck = capify_ec2.instance_health_by_url( server[:dns],
-        #                                                    server[:options][:healthcheck][:port], 
-        #                                                    server[:options][:healthcheck][:path], 
-        #                                                    server[:options][:healthcheck][:result], 
-        #                                                    options )
-        #   if healthcheck
-        #     puts "[Capify-EC2] Healthcheck successful.".green.bold
-        #   else
-        #     puts "[Capify-EC2] Deployment failed!".red.bold
-        #     raise "Healthcheck timeout exceeded"
-        #   end
-        # end
-
-        successful_deploys << {:dns => current_server, :roles => server_roles}
+   
+        successful_deploys << server_dns
 
       end
+    rescue CapifyEC2RollingDeployError => e
+      failed_deploys << e.dns
+      puts "[Capify-EC2]"
+      puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
+
     rescue => e
-      puts "\n[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
-      exit 1
+      puts "[Capify-EC2]"
+      puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
+
+    else
+      puts "[Capify-EC2]"
+      puts "[Capify-EC2] Rolling deployment completed.".green.bold  
+
     end
 
-    puts "[Capify-EC2] Rolling deployment completed."
+    puts "[Capify-EC2]"
     puts "[Capify-EC2]   Successful servers:"
-
-    successful_deploys.each {|s| puts "[Capify-EC2]      #{s[:dns]} with #{s[:roles].count > 1 ? 'roles' : 'role'} '#{s[:roles].join(', ')}'."}
-
+    format_rolling_deploy_results( all_servers, successful_deploys )
+     
     puts "[Capify-EC2]"
+    puts "[Capify-EC2]   Failed servers:"
+    format_rolling_deploy_results( all_servers, failed_deploys )
+    
     puts "[Capify-EC2]"
-    puts "[Capify-EC2]"
-    puts "[Capify-EC2]"
+    puts "[Capify-EC2]   Pending servers:"
+    pending_deploys = (all_servers.keys - successful_deploys) - failed_deploys
+    format_rolling_deploy_results( all_servers, pending_deploys )
   end
 
   def ec2_roles(*roles)

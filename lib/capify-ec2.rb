@@ -189,3 +189,23 @@ class CapifyEc2
     result ? result.body == expected_response : false
   end
 end
+
+def instance_dns_with_name_tag(dns)
+  name_tag     = ''
+  current_node = capify_ec2.desired_instances.select { |instance| instance.dns_name == dns }
+  name_tag     = current_node.first.tags['Name'] unless current_node.empty?
+  "#{dns} (#{name_tag})"
+end
+
+def format_rolling_deploy_results(all_servers, results)
+  results.each {|server| puts "[Capify-EC2]      #{instance_dns_with_name_tag(server)} with #{all_servers[server].count >1 ? 'roles' : 'role'} '#{all_servers[server].join(', ')}'."}
+end
+
+class CapifyEC2RollingDeployError < Exception
+  attr_reader :dns
+
+  def initialize(msg, dns)
+    super(msg)
+    @dns = dns
+  end
+end
