@@ -100,7 +100,7 @@ Capistrano::Configuration.instance(:must_exist).load do
         
 
         current_server = "#{server_dns} #{current_node_name}"
-        puts "[Capify-EC2] Beginning deployment to #{current_server}...".bold
+        puts "[Capify-EC2] Beginning deployment to #{current_server} with #{server_roles.count > 1 ? 'roles' : 'role'} '#{server_roles.join(', ')}'...".bold
 
         # Call the standard 'cap deploy' task with our redefined role containing a single server.
         # top.deploy.default
@@ -110,14 +110,14 @@ Capistrano::Configuration.instance(:must_exist).load do
             options = {}
             options[:https]   = all_roles[a_role][:options][:healthcheck][:https]   ||= false
             options[:timeout] = all_roles[a_role][:options][:healthcheck][:timeout] ||= 60
-            puts "[Capify-EC2] Starting healthcheck for role '#{a_role}..."
+            puts "[Capify-EC2] Starting healthcheck for role '#{a_role}'..."
             healthcheck = capify_ec2.instance_health_by_url( server_dns,
                                                              all_roles[a_role][:options][:healthcheck][:port], 
                                                              all_roles[a_role][:options][:healthcheck][:path], 
                                                              all_roles[a_role][:options][:healthcheck][:result], 
                                                              options )
             if healthcheck
-              puts "[Capify-EC2] Healthcheck for role '#{a_role}' successful.".green_on_red.underline.bold
+              puts "[Capify-EC2] Healthcheck for role '#{a_role}' successful.".green.bold
             else
               puts "[Capify-EC2] Healthcheck for role '#{a_role}' failed!".red.bold
               raise "Healthcheck timeout exceeded"
@@ -143,7 +143,7 @@ Capistrano::Configuration.instance(:must_exist).load do
         #   end
         # end
 
-        successful_deploys << current_server
+        successful_deploys << {:dns => current_server, :roles => server_roles}
 
       end
     rescue => e
@@ -154,7 +154,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     puts "[Capify-EC2] Rolling deployment completed."
     puts "[Capify-EC2]   Successful servers:"
 
-    successful_deploys.each {|s| puts "[Capify-EC2]      #{s}"}
+    successful_deploys.each {|s| puts "[Capify-EC2]      #{s[:dns]} with #{s[:roles].count > 1 ? 'roles' : 'role'} '#{s[:roles].join(', ')}'."}
 
     puts "[Capify-EC2]"
     puts "[Capify-EC2]"
