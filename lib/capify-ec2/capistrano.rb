@@ -82,17 +82,19 @@ Capistrano::Configuration.instance(:must_exist).load do
 
         roles.clear
 
-        server_roles.each do |a_role|        
+        server_roles.each do |a_role|     
           role a_role, server_dns
         end
         
+        puts "[Capify-EC2]"
         puts "[Capify-EC2] Beginning deployment to #{instance_dns_with_name_tag(server_dns)} with #{server_roles.count > 1 ? 'roles' : 'role'} '#{server_roles.join(', ')}'...".bold
 
         # Call the standard 'cap deploy' task with our redefined role containing a single server.
-        # top.deploy.default
+        top.deploy.default
 
         server_roles.each do |a_role|
-
+          
+          # If a healthcheck is defined for this role, run it.
           if all_roles[a_role][:options][:healthcheck]
             options = {}
             options[:https]   = all_roles[a_role][:options][:healthcheck][:https]   ||= false
@@ -113,6 +115,7 @@ Capistrano::Configuration.instance(:must_exist).load do
 
         end
    
+        puts "[Capify-EC2] Deployment successful to #{instance_dns_with_name_tag(server_dns)}.".green.bold
         successful_deploys << server_dns
 
       end

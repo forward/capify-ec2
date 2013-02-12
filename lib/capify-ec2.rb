@@ -198,6 +198,7 @@ def instance_dns_with_name_tag(dns)
 end
 
 def format_rolling_deploy_results(all_servers, results)
+  puts '[Capify-EC2]      None.' unless results.any?
   results.each {|server| puts "[Capify-EC2]      #{instance_dns_with_name_tag(server)} with #{all_servers[server].count >1 ? 'roles' : 'role'} '#{all_servers[server].join(', ')}'."}
 end
 
