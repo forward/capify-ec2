@@ -71,12 +71,6 @@ You will need to create instance tags using the AWS Management Console or API, t
   on_no_matching_servers => :continue
   "one of those ten is cron" etc.
 
-  VARIABLES
-  say you have a RAILS_APP deploy to a staging server, role :staging, :variables => {:rails_env=>staging}
-  set :rails_env, staging
-  rails_env variable available to the tasks.
-  each variable will also be added to the Options hash for that server.
-
 
 
 ### Usage
@@ -149,7 +143,7 @@ Which would generate the following tasks:
 
 ```ruby
 task :server-1 do
-  role :db, SERVER-2_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true
+  role :web, SERVER-1_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true
 end
 
 task :server-2 do
@@ -157,17 +151,45 @@ task :server-2 do
 end
 
 task :server-3 do
+  role :web, SERVER-3_EC2_PUBLIC_DNS_HERE
   role :db, SERVER-3_EC2_PUBLIC_DNS_HERE
 end
 
 task :web do
-  role :db, SERVER-1_EC2_PUBLIC_DNS_HERE
-  role :db, SERVER-3_EC2_PUBLIC_DNS_HERE
+  role :web, SERVER-1_EC2_PUBLIC_DNS_HERE
+  role :web, SERVER-3_EC2_PUBLIC_DNS_HERE
 end
 
 task :db do
   role :db, SERVER-2_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true
   role :db, SERVER-3_EC2_PUBLIC_DNS_HERE
+end
+```
+
+
+
+#### Role Variables
+
+You can define custom variables which will be set as standard Capistrano variables within the scope of the role you define them one, for example:
+
+```ruby
+ec2_roles {:name=>"web", :variables => {:rails_env => 'staging'}}
+```
+
+In this case, instances that that are tagged with the 'web' role will have the custom variable 'rails_env' available to them in any tasks they use. The following tasks would be generated:
+
+```ruby
+task :server-1 do
+  role :web, SERVER-1_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true, :rails_env=>'staging'
+end
+
+task :server-3 do
+  role :web, SERVER-3_EC2_PUBLIC_DNS_HERE
+end
+
+task :web do
+  role :web, SERVER-1_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true, :rails_env=>'staging'
+  role :web, SERVER-3_EC2_PUBLIC_DNS_HERE, :rails_env=>'staging'
 end
 ```
 
@@ -250,6 +272,68 @@ ec2_roles {:name=>"db", :options{:default=>true}
 
 
 
+#### Rolling Deployments
+
+This feature allows you to deploy your code to instances one at a time, rather than simultaneously. This becomes useful for more complex applications that may take longer to startup after a deployment. Capistrano will perform a full deploy (including any custom hooks) against a single instance, optionally perform a HTTP healthcheck against the instance, then proceed to the next instance if deployment was successful.
+
+##### Usage
+
+To use the rolling deployment feature without a healthcheck, simple run your deployments with the following command:
+
+```ruby
+cap rolling_deploy
+```
+
+You can restrict the scope of the rolling deploy by targetting one or more roles like so:
+
+```ruby
+cap web rolling_deploy
+```
+
+```ruby
+cap web db rolling_deploy
+```
+
+##### Usage with Healthchecks
+
+When defining a role with the 'ec2_role' command, if you configure a healthcheck for that role as follows, it will automatically be used during the rolling deployment:
+
+```ruby
+ec2_roles { :name=>"web",
+            :variables => { 
+              :healthcheck => {
+                :path   => '/status', 
+                :port   => 80, 
+                :result => 'OK'
+              }
+          }
+```
+
+In this example, the following URL would be generated:
+
+```
+http://EC2_INSTANCE_PUBLIC_DNS_HERE:80/status
+```
+
+And the contents of the page at that URL must match 'OK' for the healthcheck to pass. If unsuccessful, the healthcheck is repeated every second, until a timeout of 60 seconds is reached, at which point the rolling deployment is aborted, and a progress summary displayed.
+
+The default timeout is 60 seconds, which can be overridden by setting ':timeout' to a custom value in seconds. The protocol used defaults to 'http://', however you can switch to 'https://' by setting ':https' equal to 'true'. For example:
+
+```ruby
+ec2_roles { :name=>"web",
+            :variables => { 
+              :healthcheck => {
+                :path    => '/status', 
+                :port    => 80, 
+                :result  => 'OK',
+                :https   => true, 
+                :timeout => 10
+              }
+          }
+```
+
+Sets a 10 second timeout, and performs the health check over HTTPS.
+
 #### Managing Load Balancers
 
 You can use the following commands to deregister and reregister instances in an Elastic Load Balancer.
@@ -308,7 +392,6 @@ Will restrict the 'date' command so it is only run on instances that are tagged 
 cap web db ec2:date
 ```
 
-
 ##### Cap Invoke
 
 You can use the standard Capistrano 'invoke' task to run an arbitrary command on your instances, for example:
@@ -328,8 +411,6 @@ You can also chain many roles together to increase the scope of the command:
 ```ruby
 cap web db COMMAND='uptime' invoke
 ```
-
-
 
 ##### Cap Shell
 
