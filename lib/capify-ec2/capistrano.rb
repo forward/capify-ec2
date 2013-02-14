@@ -82,7 +82,8 @@ Capistrano::Configuration.instance(:must_exist).load do
 
         roles.clear
 
-        server_roles.each do |a_role|     
+        server_roles.each do |a_role|  
+          #TODO: Look at defining any options associated to the specific role, maybe through calling 'ec2_role'.
           role a_role, server_dns
         end
         
@@ -125,6 +126,7 @@ Capistrano::Configuration.instance(:must_exist).load do
       puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
 
     rescue => e
+      failed_deploys << roles.values.first.servers.first.host
       puts "[Capify-EC2]"
       puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
 
