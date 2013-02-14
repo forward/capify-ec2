@@ -1,162 +1,16 @@
-Capify Ec2
-====================================================
+## Capify-EC2
 
-capify-ec2 is used to generate capistrano namespaces using ec2 tags.
+Capify-EC2 is used to generate Capistrano namespaces and tasks using Amazon EC2 instance tags, dynamically building the list of servers to be deployed to.
 
-eg: If you have three servers on amazon's ec2.
 
-    server-1 Tag: Roles => "web", Options => "cron,resque, db"
-    server-2 Tag: Roles => "db"
-    server-3 Tag: Roles => "web,db, app"
 
-Installing
+### Installation
 
     gem install capify-ec2
 
-In your deploy.rb:
+or add the gem to your project's Gemfile.
 
-```ruby
-require "capify-ec2/capistrano"
-ec2_roles :web
-```
-
-Will generate
-
-```ruby
-task :server-1 do
-  role :web, {server-1 public dns fetched from Amazon}, :cron=>true, :resque=>true
-end
-
-task :server-3 do
-  role :web, {server-1 public dns fetched from Amazon}
-end
-
-task :web do
-  role :web, {server-1 public dns fetched from Amazon}, :cron=>true, :resque=>true
-  role :web, {server-3 public dns fetched from Amazon}
-end
-```
-
-Additionally
-
-```ruby
-require "capify-ec2/capistrano"
-ec2_roles :db
-```
-
-Will generate
-
-```ruby
-task :server-2 do
-  role :db, {server-2 public dns fetched from Amazon}
-end
-
-task :server-3 do
-  role :db, {server-3 public dns fetched from Amazon}
-end
-
-task :db do
-  role :db, {server-2 public dns fetched from Amazon}
-  role :db, {server-3 public dns fetched from Amazon}
-end
-```
-
-Running
-
-```ruby
-cap web ec2:date
-```
-
-will run the date command on all server's tagged with the web role
-
-Running
-
-```ruby
-cap server-1 ec2:register_instance -s loadbalancer=elb-1
-```
-
-will register server-1 to be used by elb-1
-
-Running
-
-```ruby
-cap server-1 ec2:deregister_instance
-```
-
-will remove server-1 from whatever instance it is currently
-registered against.
-
-Running
-
-```ruby
-cap ec2:status
-```
-
-will list the currently running servers and their associated details
-(public dns, instance id, roles etc)
-
-Running
-
-```ruby
-cap ec2:ssh #
-```
-
-will launch ssh using the user and port specified in your configuration.
-The # argument is the index of the server to ssh into. Use the 'ec2:status'
-command to see the list of servers with their indices.
-
-More options
-====================================================
-
-In addition to specifying options (e.g. 'cron') at the server level, it is also possible to specify it at the project level.
-Use with caution! This does not work with autoscaling.
-
-```ruby
-ec2_roles {:name=>"web", :options=>{:cron=>"server-1"}}
-```
-
-Will generate
-
-```ruby
-task :server-1 do
-  role :web, {server-1 public dns fetched from Amazon}, :cron=>true
-end
-
-task :server-3 do
-  role :web, {server-1 public dns fetched from Amazon}
-end
-
-task :web do
-  role :web, {server-1 public dns fetched from Amazon}, :cron=>true
-  role :web, {server-3 public dns fetched from Amazon}
-end
-```
-
-Which is cool if you want a task like this in deploy.rb
-
-```ruby
-task :update_cron => :web, :only=>{:cron} do
-  Do something to a server with cron on it
-end
-
-ec2_roles :name=>:web, :options=>{ :default => true }
-```
-
-Will make :web the default role so you can just type 'cap deploy'.
-Multiple roles can be defaults so:
-
-```ruby
-ec2_roles :name=>:web, :options=>{ :default => true }
-ec2_roles :name=>:app, :options=>{ :default => true }
-```
-
-would be the equivalent of 'cap app web deploy'
-
-Ec2 config
-====================================================
-
-This gem requires 'config/ec2.yml' in your project.
-The yml file needs to look something like this:
+You will need to create a YML configuration file at 'config/ec2.yml' that looks like the following:
 
 ```ruby
 :aws_access_key_id: "YOUR ACCESS KEY"
@@ -166,29 +20,343 @@ The yml file needs to look something like this:
 :load_balanced: true
 :project_tag: "YOUR APP NAME"
 ```
-aws_access_key_id, aws_secret_access_key, and region are required. Other settings are optional.
 
-If :load_balanced is set to true, the gem uses pre and post-deploy
-hooks to deregister the instance, reregister it, and validate its
-health.
-:load_balanced only works for individual instances, not for roles.
-
-The :project_tag parameter is optional. It will limit any commands to
-running against those instances with a "Project" tag set to the value
-"YOUR APP NAME". It is also possible to apply commands to multiple projects using the :project_tags parameter, like so: 
+Finally, add the gem to your 'deploy.rb':
 
 ```ruby
-:project_tags: 
- - "YOUR APP NAME"
- - "YOUR OTHER APP NAME"
+require "capify-ec2/capistrano"
 ```
 
-## Development
+
+
+#### Configuration
+
+Note: 'aws_access_key_id', 'aws_secret_access_key', and 'region' are required. Other settings are optional.
+
+* :project_tag
+
+  If this is defined, Capify-EC2 will only create namespaces and tasks for the EC2 instances that have a matching 'Project' tag. By default, all instances available to the configured AWS access key will be used.
+
+  It is possible to include multiple projects simultaneously by using the :project_tags parameter, like so: 
+
+  ```ruby
+  :project_tags: 
+    - "YOUR APP NAME"
+    - "YOUR OTHER APP NAME"
+   ```
+
+* :load_balanced
+
+  When ':load_balanced' is set to 'true', Capify-EC2 uses pre and post-deploy hooks to deregister the instance from an associated Elastic Load Balancer, perform the actual deploy, then finally reregister with the ELB and validated the instance health.
+  Note: This options only applies to deployments made to an individual instance, using the command 'cap INSTANCE_NAME_HERE deploy' - it doesn't apply to roles.
+
+
+
+#### EC2 Tags
+
+You will need to create instance tags using the AWS Management Console or API, to further configure Capify-EC2. The following tags are used:
+
+* Tag 'Project'
+
+  Used with the ':project_tag' option in 'config/ec2.yml' to limit Capify-EC2's functionality to a subset of your instances.
+
+* Tag 'Roles'
+
+  A comma seperated list of roles that will be converted into Capistrano namespaces, for example 'app,workers', 'app,varnish,workers', 'db' and so on.
+
+* Tag 'Options'
+
+  A comma seperated list of options which will be defined as 'true' for that instance. See the 'Options' section below for more information on their use.
+  task :bob, :only => {:option_nmame => true}
+  on_no_matching_servers => :continue
+  "one of those ten is cron" etc.
+
+  VARIABLES
+  say you have a RAILS_APP deploy to a staging server, role :staging, :variables => {:rails_env=>staging}
+  set :rails_env, staging
+  rails_env variable available to the tasks.
+  each variable will also be added to the Options hash for that server.
+
+
+
+### Usage
+
+In our examples, imagine that you have three servers on EC2 defined as follows:
+
+    server-1 Tags: Name => "server-1", Roles => "web", Options => "cron,resque"
+    server-2 Tags: Name => "server-2", Roles => "db"
+    server-3 Tags: Name => "server-3", Roles => "web,db,app"
+
+#### Single Roles
+
+You need to add a call to 'ec2_roles' in your 'deploy.rb', like so:
+
+```ruby
+ec2_roles :web
+```
+
+This will generate the following tasks:
+
+```ruby
+task :server-1 do
+  role :web, SERVER-1_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true
+end
+
+task :server-3 do
+  role :web, SERVER-3_EC2_PUBLIC_DNS_HERE
+end
+
+task :web do
+  role :web, SERVER-1_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true
+  role :web, SERVER-3_EC2_PUBLIC_DNS_HERE
+end
+```
+
+Note that there are no tasks created for 'server-2', as it does not have the role 'web'. If we were to change the 'ec2_roles' definition in your 'deploy.rb' to the following:
+
+```ruby
+ec2_roles :db
+```
+
+Then we will instead see the following tasks generated:
+
+```ruby
+task :server-2 do
+  role :db, SERVER-2_EC2_PUBLIC_DNS_HERE
+end
+
+task :server-3 do
+  role :db, SERVER-3_EC2_PUBLIC_DNS_HERE
+end
+
+task :db do
+  role :db, SERVER-2_EC2_PUBLIC_DNS_HERE
+  role :db, SERVER-3_EC2_PUBLIC_DNS_HERE
+end
+```
+
+
+#### Multiple Roles
+
+If you want to create tasks for servers using multiple roles, you can call 'ec2_roles' multiple times in your 'deploy.rb' as follows:
+
+```ruby
+ec2_roles :web
+ec2_roles :db
+```
+
+Which would generate the following tasks:
+
+```ruby
+task :server-1 do
+  role :db, SERVER-2_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true
+end
+
+task :server-2 do
+  role :db, SERVER-2_EC2_PUBLIC_DNS_HERE
+end
+
+task :server-3 do
+  role :db, SERVER-3_EC2_PUBLIC_DNS_HERE
+end
+
+task :web do
+  role :db, SERVER-1_EC2_PUBLIC_DNS_HERE
+  role :db, SERVER-3_EC2_PUBLIC_DNS_HERE
+end
+
+task :db do
+  role :db, SERVER-2_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true
+  role :db, SERVER-3_EC2_PUBLIC_DNS_HERE
+end
+```
+
+
+
+#### Options
+
+##### Via EC2 Tags
+
+As mentioned in the 'EC2 Tags' section, creating an 'Options' tag on your EC2 instances will define those options as 'true' for the associated instance. This allows you to refine your capistrano tasks.
+For example, if we had the following group of instances in EC2:
+
+    server-A Tags: Name => "server-A", Roles => "web"
+    server-B Tags: Name => "server-B", Roles => "web"
+    server-C Tags: Name => "server-C", Roles => "web", Options => "worker"
+
+You could then create a task in your 'deploy.rb' that will only be executed on the worker machine, like so:
+
+```ruby
+task :reload_workers => :web, :only=>{:worker} do
+  # Do something to a server with cron on it
+end
+```
+
+##### Via Role Definitions
+
+As well as defining Options at an instance level via EC2 tags, you can define an Option in your 'deploy.rb' at the same time as defining the role, as follows:
+
+```ruby
+ec2_roles {:name=>"web", :options=>{:worker=>"server-C"}}
+```
+
+In this case, you set the value of ':worker' equal to the instance name you want to be a worker.
+
+
+
+#### Deploying
+
+Once you have defined the various roles used by your application, you can deploy to it as you normally would a namespace, for example if you define the following in your 'deploy.rb':
+
+```ruby
+ec2_roles :web
+ec2_roles :app
+```
+
+You can deploy to just the 'web' instances like so:
+
+```ruby
+cap web deploy
+```
+
+If you've defined multiple roles, you can deploy to them all by chaining the tasks, like so:
+
+```ruby
+cap web app deploy
+```
+
+
+
+##### Default Deploys
+
+You can set a role as the default so that it will be included when you run 'cap deploy' without specifying any roles, for example in your 'deploy.rb':
+
+```ruby
+ec2_roles {:name=>"web", :options{:default=>true}
+```
+
+Then run:
+
+```ruby
+cap deploy
+```
+
+You can set multiple roles as defaults, so they are all included when you run 'cap deploy', like so:
+
+```ruby
+ec2_roles {:name=>"web", :options{:default=>true}
+ec2_roles {:name=>"db", :options{:default=>true}
+```
+
+
+
+#### Managing Load Balancers
+
+You can use the following commands to deregister and reregister instances in an Elastic Load Balancer.
+
+```ruby
+cap SERVER_NAME_HERE ec2:deregister_instance
+```
+
+```ruby
+cap SERVER_NAME_HERE ec2:register_instance -s loadbalancer=ELB_NAME_HERE
+```
+
+You need to specify the ELB when reregistering an instance, but not when deregistering. This can also be done automatically using the ':load_balanced' setting (see the 'Configuration' section above).
+
+
+
+#### Viewing All Instances
+
+The following command will generate a listing of all instances that match your configuration (projects and roles), along with their associated details:
+
+```ruby
+cap ec2:status
+```
+
+
+
+#### Connecting to an Instance via SSH
+
+Using the 'cap ec2:ssh' command, you can quickly connect to a specific instance, by checking the listing from 'ec2:status' and using the instance number as a parameter, for example:
+
+```ruby
+cap ec2:ssh 1
+```
+
+will attempt to connect to instance number 1 (as shown in 'ec2:status'), using the public DNS address provided by AWS.
+
+
+
+#### Other Commands
+
+Running the following command:
+
+```ruby
+cap ec2:date
+```
+
+Will execute the 'date' command on all instances that match your configuration (projects and roles). You can limit this further by using a role, for example:
+
+```ruby
+cap web ec2:date
+```
+
+Will restrict the 'date' command so it is only run on instances that are tagged with the 'web' role. You can chain many roles together to increase the scope of the command:
+
+```ruby
+cap web db ec2:date
+```
+
+
+##### Cap Invoke
+
+You can use the standard Capistrano 'invoke' task to run an arbitrary command on your instances, for example:
+
+```ruby
+cap COMMAND='uptime' invoke
+```
+
+Will run the 'uptime' command on all instances that match your configuration (projects and roles). As with the 'ec2:date' command, you can further limit this by using a role, like so:
+
+```ruby
+cap web COMMAND='uptime' invoke
+```
+
+You can also chain many roles together to increase the scope of the command:
+
+```ruby
+cap web db COMMAND='uptime' invoke
+```
+
+
+
+##### Cap Shell
+
+You can use the standard Capistrano 'shell' task to open an interactive terminal session with your instances, for example:
+
+```ruby
+cap shell
+```
+
+Will open an interactive terminal on all instances that match your configuration (projects and roles). You can of course limit the scope of the shell to a certain role or roles like so:
+
+```ruby
+cap web shell
+```
+
+```ruby
+cap web db shell
+```
+
+
+
+### Development
 
 Source hosted at [GitHub](http://github.com/forward/capify-ec2).
 Report Issues/Feature requests on [GitHub Issues](http://github.com/forward/capify-ec2/issues).
 
-### Note on Patches/Pull Requests
+#### Note on Patches/Pull Requests
 
  * Fork the project.
  * Make your feature addition or bug fix.
@@ -198,6 +366,6 @@ Report Issues/Feature requests on [GitHub Issues](http://github.com/forward/capi
    (if you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)
  * Send me a pull request. Bonus points for topic branches.
 
-## Copyright
+### Copyright
 
-Copyright (c) 2012 Forward. See [LICENSE](https://github.com/forward/capify-ec2/blob/master/LICENSE) for details.
+Copyright (c) 2011, 2012, 2013 Forward. See [LICENSE](https://github.com/forward/capify-ec2/blob/master/LICENSE) for details.
