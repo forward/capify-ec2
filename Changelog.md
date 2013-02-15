@@ -1,3 +1,10 @@
+## 1.4.0.pre1 (Feb 15, 2013)
+
+Features:
+
+  - New rolling deployment mode, allows you to deploy to your instances in serial, rather than in parallel, with an option to perform a healthcheck before proceeding to the next instance. For more information on this feature, check out the [documentation](readme.md#rolling-deployments).
+  - The documentation has been rewritten to make it clearer how to use Capify-EC2 and what the available options are.
+
 ## 1.3.7 (Jan 20, 2013)
 
   - Make the behaviour for passing hash/filename consistent

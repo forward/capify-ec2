@@ -1,6 +1,6 @@
 ## Capify-EC2
 
-Capify-EC2 is used to generate Capistrano namespaces and tasks using Amazon EC2 instance tags, dynamically building the list of servers to be deployed to.
+Capify-EC2 is used to generate Capistrano namespaces and tasks from Amazon EC2 instance tags, dynamically building the list of servers to be deployed to.
 
 
 ### Installation
