@@ -1,3 +1,8 @@
+## 1.3.7 (Jan 20, 2013)
+
+  - Make the behaviour for passing hash/filename consistent
+  - Fix ec2_role when role_name_or_hash is not a hash.
+
 ## 1.3.6 (Jan 17, 2013)
 
 Bugfixes:

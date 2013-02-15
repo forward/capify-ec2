@@ -3,7 +3,6 @@ require 'fog'
 require 'colored'
 require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
 
-
 class CapifyEc2
 
   attr_accessor :load_balancer, :instances
@@ -18,23 +17,24 @@ class CapifyEc2
       @ec2_config = ec2_config
     when String
       @ec2_config = YAML.load_file ec2_config
-
-      # Maintain backward compatibility with previous config format
-      @ec2_config[:project_tags] ||= []
-      # User can change the Roles tag string
-      @ec2_config[:aws_roles_tag] ||= "Roles"
-      @ec2_config[:project_tags] << @ec2_config[:project_tag] if @ec2_config[:project_tag]
     else
       raise ArgumentError, "Invalid ec2_config: #{ec2_config.inspect}"
     end
 
+    # Maintain backward compatibility with previous config format
+    @ec2_config[:project_tags] ||= []
+    # User can change the Roles tag string
+    @ec2_config[:aws_roles_tag] ||= "Roles"
+    @ec2_config[:project_tags] << @ec2_config[:project_tag] if @ec2_config[:project_tag]
+    
     regions = determine_regions()
     
     @instances = []
     regions.each do |region|
-      servers = Fog::Compute.new(:provider => 'AWS', :aws_access_key_id => @ec2_config[:aws_access_key_id], 
-        :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => region).servers
-      servers.each do |server|
+      Fog::Compute.new(:provider => 'AWS', 
+                       :aws_access_key_id => @ec2_config[:aws_access_key_id], 
+                       :aws_secret_access_key => @ec2_config[:aws_secret_access_key], 
+                       :region => region).servers.each do |server|
         @instances << server if server.ready?
       end
     end

@@ -182,7 +182,8 @@ Capistrano::Configuration.instance(:must_exist).load do
       instances.each do |instance|
         define_role(role, instance)
       end
-    end    
+    end
+
     regions = capify_ec2.determine_regions
     regions.each do |region|
       define_regions(region, role)
