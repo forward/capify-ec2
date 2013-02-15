@@ -1,3 +1,9 @@
+## 1.4.0.pre2 (Feb 15, 2013)
+
+Features:
+
+  - Minimum Capistrano version required set to v2.14 or greater. This fixes several issues, including an exception being thrown when a task was limited to certain roles, which weren't specified during deployment. For example, a task limited to ':roles => [:web]' would raise an exception if you tried to run 'cap db deploy', as no roles would match.
+
 ## 1.4.0.pre1 (Feb 15, 2013)
 
 Features:
