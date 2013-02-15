@@ -3,7 +3,6 @@
 Capify-EC2 is used to generate Capistrano namespaces and tasks using Amazon EC2 instance tags, dynamically building the list of servers to be deployed to.
 
 
-
 ### Installation
 
     gem install capify-ec2
@@ -299,7 +298,7 @@ cap web db rolling_deploy
 When defining a role with the 'ec2_role' command, if you configure a healthcheck for that role as follows, it will automatically be used during the rolling deployment:
 
 ```ruby
-ec2_roles { :name=>"web",
+ec2_roles { :name => "web",
             :variables => { 
               :healthcheck => {
                 :path   => '/status', 
@@ -320,7 +319,7 @@ And the contents of the page at that URL must match 'OK' for the healthcheck to 
 The default timeout is 60 seconds, which can be overridden by setting ':timeout' to a custom value in seconds. The protocol used defaults to 'http://', however you can switch to 'https://' by setting ':https' equal to 'true'. For example:
 
 ```ruby
-ec2_roles { :name=>"web",
+ec2_roles { :name => "web",
             :variables => { 
               :healthcheck => {
                 :path    => '/status', 
