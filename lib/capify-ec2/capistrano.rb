@@ -70,29 +70,36 @@ Capistrano::Configuration.instance(:must_exist).load do
       role[1].servers.each do |s|
         all_servers[ s.host.to_s ] ||= []
         all_servers[ s.host.to_s ] << role[0]
-        all_roles[ role[0] ] = {:options => {:healthcheck => s.options[:healthcheck] ||= nil}} unless all_roles[ role[0] ]
+        all_roles[ role[0] ] = {:options => (s.options ||= nil)} unless all_roles[ role[0] ]
       end
     end
 
     successful_deploys = []
     failed_deploys     = []
 
+    # Here outside of the scope of the rescue so we can refer to it if a general exception is raised.
+    load_balancer_to_reregister = nil
+
     begin
       all_servers.each do |server_dns,server_roles|
 
         roles.clear
 
-        server_roles.each do |a_role|  
-          #TODO: Look at defining any options associated to the specific role, maybe through calling 'ec2_role'.
-          role a_role, server_dns
+        load_balancer_to_reregister = nil # Set to nil again here, to ensure it always starts off nil for every iteration.
+        is_load_balanced = false
+
+        server_roles.each do |a_role|
+          role a_role, server_dns, all_roles[a_role][:options]
+          is_load_balanced = true if all_roles[a_role][:options][:load_balanced]
         end
         
         puts "[Capify-EC2]"
         puts "[Capify-EC2] Beginning deployment to #{instance_dns_with_name_tag(server_dns)} with #{server_roles.count > 1 ? 'roles' : 'role'} '#{server_roles.join(', ')}'...".bold
 
-        load_balancer = capify_ec2.deregister_instance_from_elb_by_dns(server_dns)
+        load_balancer_to_reregister = capify_ec2.deregister_instance_from_elb_by_dns(server_dns) if is_load_balanced
+        
         # Call the standard 'cap deploy' task with our redefined role containing a single server.
-        # top.deploy.default
+        top.deploy.default
 
         server_roles.each do |a_role|
           
@@ -117,13 +124,12 @@ Capistrano::Configuration.instance(:must_exist).load do
 
         end
 
-        if load_balancer
-          reregistered = capify_ec2.reregister_instance_with_elb_by_dns(server_dns, load_balancer, 60)
-
+        if load_balancer_to_reregister
+          reregistered = capify_ec2.reregister_instance_with_elb_by_dns(server_dns, load_balancer_to_reregister, 60)
           if reregistered
-            puts "[Capify-EC2] Instance registration with ELB '#{load_balancer.id}' successful.".green.bold
+            puts "[Capify-EC2] Instance registration with ELB '#{load_balancer_to_reregister.id}' successful.".green.bold
           else
-            puts "[Capify-EC2] Instance registration with ELB '#{load_balancer.id}' failed!".red.bold
+            puts "[Capify-EC2] Instance registration with ELB '#{load_balancer_to_reregister.id}' failed!".red.bold
             raise CapifyEC2RollingDeployError.new("ELB registration timeout exceeded", server_dns)
           end
         end
@@ -136,10 +142,12 @@ Capistrano::Configuration.instance(:must_exist).load do
       failed_deploys << e.dns
       puts "[Capify-EC2]"
       puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
+      puts "[Capify-EC2] Note: Instance '#{instance_dns_with_name_tag(e.dns)}' was removed from the ELB '#{load_balancer_to_reregister.id}' and should be manually checked and reregistered.".red.bold if load_balancer_to_reregister
     rescue => e
       failed_deploys << roles.values.first.servers.first.host
       puts "[Capify-EC2]"
       puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
+      puts "[Capify-EC2] Note: Instance '#{instance_dns_with_name_tag(roles.values.first.servers.first.host)}' was removed from the ELB '#{load_balancer_to_reregister.id}' and should be manually checked and reregistered.".red.bold if load_balancer_to_reregister
     else
       puts "[Capify-EC2]"
       puts "[Capify-EC2] Rolling deployment completed.".green.bold  
