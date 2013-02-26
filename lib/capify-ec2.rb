@@ -171,8 +171,6 @@ class CapifyEc2
   end
 
   def deregister_instance_from_elb_by_dns(server_dns)
-    return unless @ec2_config[:load_balanced]
-    
     instance = get_instance_by_dns(server_dns)
     load_balancer = get_load_balancer_by_instance(instance.id)
 
