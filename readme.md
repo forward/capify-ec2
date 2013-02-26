@@ -1,3 +1,7 @@
+#TODO: Note that load_balanced can only be used if an instance is in a single ELB.
+#TODO: Document the use of load_balanced with rolling deploy.
+
+
 ## Capify-EC2
 
 Capify-EC2 is used to generate Capistrano namespaces and tasks from Amazon EC2 instance tags, dynamically building the list of servers to be deployed to.
@@ -76,9 +80,9 @@ You will need to create instance tags using the AWS Management Console or API, t
 
 In our examples, imagine that you have three servers on EC2 defined as follows:
 
-    server-1 Tags: Name => "server-1", Roles => "web", Options => "cron,resque"
-    server-2 Tags: Name => "server-2", Roles => "db"
-    server-3 Tags: Name => "server-3", Roles => "web,db,app"
+    server-1 Tags: Name: "server-1", Roles: "web", Options: "cron,resque"
+    server-2 Tags: Name: "server-2", Roles: "db"
+    server-3 Tags: Name: "server-3", Roles: "web,db,app"
 
 #### Single Roles
 
@@ -253,7 +257,7 @@ cap web app deploy
 You can set a role as the default so that it will be included when you run 'cap deploy' without specifying any roles, for example in your 'deploy.rb':
 
 ```ruby
-ec2_roles {:name=>"web", :options{:default=>true}
+ec2_roles :name=>"web", :options => {:default=>true}
 ```
 
 Then run:
@@ -265,8 +269,8 @@ cap deploy
 You can set multiple roles as defaults, so they are all included when you run 'cap deploy', like so:
 
 ```ruby
-ec2_roles {:name=>"web", :options{:default=>true}
-ec2_roles {:name=>"db", :options{:default=>true}
+ec2_roles :name=>"web", :options => {:default=>true}
+ec2_roles :name=>"db", :options => {:default=>true}
 ```
 
 
@@ -298,13 +302,13 @@ cap web db rolling_deploy
 When defining a role with the 'ec2_role' command, if you configure a healthcheck for that role as follows, it will automatically be used during the rolling deployment:
 
 ```ruby
-ec2_roles { :name => "web",
-            :variables => { 
-              :healthcheck => {
-                :path   => '/status', 
-                :port   => 80, 
-                :result => 'OK'
-              }
+ec2_roles :name => "web",
+          :variables => { 
+            :healthcheck => {
+              :path   => '/status',
+              :port   => 80, 
+              :result => 'OK'
+            }
           }
 ```
 
@@ -319,19 +323,31 @@ And the contents of the page at that URL must match 'OK' for the healthcheck to 
 The default timeout is 60 seconds, which can be overridden by setting ':timeout' to a custom value in seconds. The protocol used defaults to 'http://', however you can switch to 'https://' by setting ':https' equal to 'true'. For example:
 
 ```ruby
-ec2_roles { :name => "web",
-            :variables => { 
-              :healthcheck => {
-                :path    => '/status', 
-                :port    => 80, 
-                :result  => 'OK',
-                :https   => true, 
-                :timeout => 10
-              }
+ec2_roles :name => "web",
+          :variables => { 
+            :healthcheck => {
+              :path   => '/status',
+              :port   => 80, 
+              :result => 'OK'
+              :https   => true, 
+              :timeout => 10
+            }
           }
 ```
 
 Sets a 10 second timeout, and performs the health check over HTTPS.
+
+
+
+#### Viewing All Instances
+
+The following command will generate a listing of all instances that match your configuration (projects and roles), along with their associated details:
+
+```ruby
+cap ec2:status
+```
+
+
 
 #### Managing Load Balancers
 
@@ -346,16 +362,6 @@ cap SERVER_NAME_HERE ec2:register_instance -s loadbalancer=ELB_NAME_HERE
 ```
 
 You need to specify the ELB when reregistering an instance, but not when deregistering. This can also be done automatically using the ':load_balanced' setting (see the 'Configuration' section above).
-
-
-
-#### Viewing All Instances
-
-The following command will generate a listing of all instances that match your configuration (projects and roles), along with their associated details:
-
-```ruby
-cap ec2:status
-```
 
 
 
