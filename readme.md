@@ -1,7 +1,3 @@
-#TODO: Note that load_balanced can only be used if an instance is in a single ELB.
-#TODO: Document the use of load_balanced with rolling deploy.
-
-
 ## Capify-EC2
 
 Capify-EC2 is used to generate Capistrano namespaces and tasks from Amazon EC2 instance tags, dynamically building the list of servers to be deployed to.
@@ -279,6 +275,8 @@ ec2_roles :name=>"db", :options => {:default=>true}
 
 This feature allows you to deploy your code to instances one at a time, rather than simultaneously. This becomes useful for more complex applications that may take longer to startup after a deployment. Capistrano will perform a full deploy (including any custom hooks) against a single instance, optionally perform a HTTP healthcheck against the instance, then proceed to the next instance if deployment was successful.
 
+After deployment a status report is displayed, indicating on which instances deployment succeeded, failed or did not begin. With some failures, further action may need to be taken manually; for example if an instance is removed from an ELB (see the 'Usage with Elastic Load Balancers' section below) and the deployment fails, the instance will not be reregistered with the ELB, for safety reasons.
+
 ##### Usage
 
 To use the rolling deployment feature without a healthcheck, simple run your deployments with the following command:
@@ -336,6 +334,39 @@ ec2_roles :name => "web",
 ```
 
 Sets a 10 second timeout, and performs the health check over HTTPS.
+
+##### Usage with Elastic Load Balancers
+
+You can have Capify-EC2 automatically deregister and reregister an instance from whichever ELB it is associated with, before and after the deployment, by setting ':load_balanced' to 'true' in the role definition, for example:
+
+```ruby
+ec2_roles :name => "web",
+          :variables => {
+            :load_balanced => true
+          }
+```
+
+In this example, when an instance with the role 'web' is deployed to, Capify-EC2 will attempt to find which ELB the instance is currently registered with and deregister it. The deploy will then proceed as usual. When it is complete, the instance will be reregistered with the same ELB, and the status verified as 'InService' before the deployment is deemed successful. Note: You can only use this feature with instances that are registered with a single ELB, if you have instances registered with multiple ELBs, you are advised not to use this feature.
+
+You can also combine this feature with a Healthcheck like so:
+
+```ruby
+ec2_roles :name => "web",
+          :variables => {
+            :healthcheck => {
+                :path   => '/status',
+                :port   => 80, 
+                :result => 'OK'
+              }
+            :load_balanced => true
+          }
+```
+
+In this example, the instance will be deregistered from the ELB it is associated with and then deployed to. A healthcheck will then be performed, and providing this passes, the instance will be reregistered with the ELB and verified.
+
+If an instance has been tagged with multiple roles, this behaviour will apply if ':load_balanced' is set to 'true' in at least one of those roles.
+
+If an instance is not associated with any ELBs, then the behaviour will be skipped silently, even if ':load_balanced' is set to 'true'.
 
 
 
