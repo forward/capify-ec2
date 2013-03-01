@@ -77,11 +77,11 @@ You will need to create instance tags using the AWS Management Console or API, t
 In our examples, imagine that you have three servers on EC2 named and tagged as follows:
 
 <table>
-  <th>
+  <tr>
     <td>'Name' Tag</td>
     <td>'Roles' Tag</td>
     <td>'Options' Tag</td>
-  </th>
+  </tr>
   <tr>
     <td>server-1</td>
     <td>web</td>
