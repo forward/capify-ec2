@@ -1,3 +1,14 @@
+## 1.4.1.pre3 (Mar 1, 2013)
+
+Features:
+
+  - Added the ability to automatically deregister and reregister an instance from its associated Elastic Load Balancer when using the rolling deployment feature.
+
+Bugfixes:
+
+  - Instance options are now properly retained when performing a rolling deployment.
+  - Fixed a range of errors in the documentation.
+
 ## 1.4.0.pre2 (Feb 15, 2013)
 
 Features:
