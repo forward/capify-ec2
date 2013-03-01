@@ -1,6 +1,8 @@
 Capify Ec2
 ====================================================
 
+Note: There is a pre-release version of Capify-EC2 currently in public testing, you can find it on Rubygems as v1.4.1.pre3 and in Github under the 'rolling_deploy' branch.
+
 capify-ec2 is used to generate capistrano namespaces using ec2 tags.
 
 eg: If you have three servers on amazon's ec2.
