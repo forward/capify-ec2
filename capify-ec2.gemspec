@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.name        = "capify-ec2"
   s.version     = Capify::Ec2::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["Noah Cantor", "Siddharth Dawara"]
+  s.authors     = ["Noah Cantor", "Siddharth Dawara", "Jon Spalding", "Ryan Conway"]
   s.email       = ["capify-ec2@forwardtechnology.co.uk"]
   s.homepage    = "http://github.com/forward/capify-ec2"
   s.summary     = %q{Capify-EC2 is used to generate Capistrano namespaces and tasks from Amazon EC2 instance tags, dynamically building the list of servers to be deployed to.}
