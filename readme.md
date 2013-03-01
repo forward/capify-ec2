@@ -74,11 +74,32 @@ You will need to create instance tags using the AWS Management Console or API, t
 
 ### Usage
 
-In our examples, imagine that you have three servers on EC2 defined as follows:
+In our examples, imagine that you have three servers on EC2 named and tagged as follows:
 
-    server-1 Tags: Name: "server-1", Roles: "web", Options: "cron,resque"
-    server-2 Tags: Name: "server-2", Roles: "db"
-    server-3 Tags: Name: "server-3", Roles: "web,db,app"
+<table>
+  <th>
+    <td>'Name' Tag</td>
+    <td>'Roles' Tag</td>
+    <td>'Options' Tag</td>
+  </th>
+  <tr>
+    <td>server-1</td>
+    <td>web</td>
+    <td>cron,resque</td>
+  </tr>
+  <tr>
+    <td>server-2</td>
+    <td>db</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>server-3</td>
+    <td>web,db,app</td>
+    <td></td>
+  </tr>
+</table>
+
+
 
 #### Single Roles
 
@@ -318,7 +339,7 @@ http://EC2_INSTANCE_PUBLIC_DNS_HERE:80/status
 
 And the contents of the page at that URL must match 'OK' for the healthcheck to pass. If unsuccessful, the healthcheck is repeated every second, until a timeout of 60 seconds is reached, at which point the rolling deployment is aborted, and a progress summary displayed.
 
-The default timeout is 60 seconds, which can be overridden by setting ':timeout' to a custom value in seconds. The protocol used defaults to 'http://', however you can switch to 'https://' by setting ':https' equal to 'true'. For example:
+The default timeout of 60 seconds can be overridden by setting ':timeout' to a custom value in seconds. The protocol used defaults to 'http://', however you can switch to 'https://' by setting ':https' equal to 'true'. For example:
 
 ```ruby
 ec2_roles :name => "web",
