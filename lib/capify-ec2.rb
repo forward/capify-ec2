@@ -16,7 +16,16 @@ class CapifyEc2
     when Hash
       @ec2_config = ec2_config
     when String
-      @ec2_config = YAML.load_file ec2_config
+      begin
+        @ec2_config = YAML.load_file ec2_config
+      rescue
+        # config file not found, try to use Fog for the credentials
+        @ec2_config = Hash.new
+        @ec2_config[:aws_access_key_id] = Fog.credentials[:aws_access_key_id]
+        @ec2_config[:aws_secret_access_key] = Fog.credentials[:aws_secret_access_key]
+        @ec2_config[:aws_params] = Hash.new
+        @ec2_config[:aws_params][:region] = Fog.credentials[:region] || 'us-east-1'
+      end
     else
       raise ArgumentError, "Invalid ec2_config: #{ec2_config.inspect}"
     end
