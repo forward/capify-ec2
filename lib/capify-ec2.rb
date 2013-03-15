@@ -45,6 +45,11 @@ class CapifyEc2
   end
     
   def display_instances
+    unless desired_instances and desired_instances.any?
+      puts "[Capify-EC2] No instances were found using your 'ec2.yml' configuration.".red.bold
+      return
+    end
+    
     # Set minimum widths for the variable length instance attributes.
     column_widths = { :name_min => 4, :type_min => 4, :dns_min => 5, :roles_min => 5, :options_min => 6 }
 
