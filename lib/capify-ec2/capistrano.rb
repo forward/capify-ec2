@@ -99,26 +99,32 @@ Capistrano::Configuration.instance(:must_exist).load do
         load_balancer_to_reregister = capify_ec2.deregister_instance_from_elb_by_dns(server_dns) if is_load_balanced
         
         # Call the standard 'cap deploy' task with our redefined role containing a single server.
-        top.deploy.default
+        # top.deploy.default
 
         server_roles.each do |a_role|
           
-          # If a healthcheck is defined for this role, run it.
+          # If healthcheck(s) are defined for this role, run them.
           if all_roles[a_role][:options][:healthcheck]
-            options = {}
-            options[:https]   = all_roles[a_role][:options][:healthcheck][:https]   ||= false
-            options[:timeout] = all_roles[a_role][:options][:healthcheck][:timeout] ||= 60
-            puts "[Capify-EC2] Starting healthcheck for role '#{a_role}'..."
-            healthcheck = capify_ec2.instance_health_by_url( server_dns,
-                                                             all_roles[a_role][:options][:healthcheck][:port], 
-                                                             all_roles[a_role][:options][:healthcheck][:path], 
-                                                             all_roles[a_role][:options][:healthcheck][:result], 
-                                                             options )
-            if healthcheck
-              puts "[Capify-EC2] Healthcheck for role '#{a_role}' successful.".green.bold
-            else
-              puts "[Capify-EC2] Healthcheck for role '#{a_role}' failed!".red.bold
-              raise CapifyEC2RollingDeployError.new("Healthcheck timeout exceeded", server_dns)
+            healthchecks_for_role = [ all_roles[a_role][:options][:healthcheck] ].flatten
+
+            puts "[Capify-EC2] Starting #{pluralise(healthchecks_for_role.size, 'healthcheck')} for role '#{a_role}'..."
+
+            healthchecks_for_role.each_with_index do |healthcheck_for_role, i|
+              options = {}
+              options[:https]   = healthcheck_for_role[:https]   ||= false
+              options[:timeout] = healthcheck_for_role[:timeout] ||= 60
+
+              healthcheck = capify_ec2.instance_health_by_url( server_dns,
+                                                               healthcheck_for_role[:port], 
+                                                               healthcheck_for_role[:path], 
+                                                               healthcheck_for_role[:result], 
+                                                               options )
+              if healthcheck
+                puts "[Capify-EC2] Healthcheck #{i+1} of #{healthchecks_for_role.size} for role '#{a_role}' successful.".green.bold
+              else
+                puts "[Capify-EC2] Healthcheck #{i+1} of #{healthchecks_for_role.size} for role '#{a_role}' failed!".red.bold
+                raise CapifyEC2RollingDeployError.new("Healthcheck timeout exceeded", server_dns)
+              end
             end
           end
 
@@ -266,6 +272,16 @@ Capistrano::Configuration.instance(:must_exist).load do
   
   def numeric?(object)
     true if Float(object) rescue false
+  end
+
+  def pluralise(n, singular, plural=nil)
+    if n == 1
+        "#{singular}"
+    elsif plural
+        "#{plural}"
+    else
+        "#{singular}s"
+    end
   end
   
   def remove_default_roles	 	

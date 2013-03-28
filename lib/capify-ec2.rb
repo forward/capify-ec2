@@ -221,8 +221,10 @@ class CapifyEc2
   def instance_health_by_url(dns, port, path, expected_response, options = {})
     protocol = options[:https] ? 'https://' : 'http://'
     uri = URI("#{protocol}#{dns}:#{port}#{path}")
-    http = Net::HTTP.new(uri.host, uri.port)
 
+    puts "[Capify-EC2] Checking '#{uri}' for the content '#{expected_response}'..."    
+
+    http = Net::HTTP.new(uri.host, uri.port)
     result = nil
 
     begin
