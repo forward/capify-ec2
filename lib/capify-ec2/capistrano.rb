@@ -154,13 +154,13 @@ Capistrano::Configuration.instance(:must_exist).load do
       failed_deploys << e.dns
       puts "[Capify-EC2]"
       puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
-      puts "[Capify-EC2]"
+      puts "[Capify-EC2]" if load_balancer_to_reregister
       puts "[Capify-EC2] Note: Instance '#{instance_dns_with_name_tag(e.dns)}' was removed from the ELB '#{load_balancer_to_reregister.id}' and should be manually checked and reregistered.".red.bold if load_balancer_to_reregister
     rescue => e
       failed_deploys << roles.values.first.servers.first.host
       puts "[Capify-EC2]"
       puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
-      puts "[Capify-EC2]"
+      puts "[Capify-EC2]" if load_balancer_to_reregister
       puts "[Capify-EC2] Note: Instance '#{instance_dns_with_name_tag(roles.values.first.servers.first.host)}' was removed from the ELB '#{load_balancer_to_reregister.id}' and should be manually checked and reregistered.".red.bold if load_balancer_to_reregister
     else
       puts "[Capify-EC2]"
