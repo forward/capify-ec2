@@ -360,6 +360,23 @@ ec2_roles :name => "web",
 
 Sets a 10 second timeout, and performs the health check over HTTPS.
 
+You can run multiple different healthchecks for a role by specifying the healthcheck as an array instead:
+
+```ruby
+ec2_roles :name => "web",
+          :variables => { 
+            :healthcheck => [{
+              :path   => '/status',
+              :port   => 80, 
+              :result => 'OK'
+            }, {
+              :path   => '/other_status',
+              :port   => 81, 
+              :result => 'OK'
+            }]
+          }
+```
+
 ##### Usage with Elastic Load Balancers
 
 You can have Capify-EC2 automatically deregister and reregister an instance from whichever ELB it is associated with, before and after the deployment, by setting ':load_balanced' to 'true' in the role definition, for example:

@@ -1,3 +1,15 @@
+## 1.4.2.pre4 (Mar 28, 2013)
+
+Features:
+
+  - Added the ability to run multiple healthchecks per role by specifying an array of them when defining the role.
+  - Improved readability of output from rolling deployments.
+
+Bugfixes:
+
+  - Error handling improved when working with the 'ec2:ssh' command.
+
+
 ## 1.4.1.pre3 (Mar 1, 2013)
 
 Features:
