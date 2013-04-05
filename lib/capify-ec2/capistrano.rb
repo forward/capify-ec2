@@ -1,6 +1,5 @@
 require File.join(File.dirname(__FILE__), '../capify-ec2')
 require 'colored'
-require 'pp'
 
 Capistrano::Configuration.instance(:must_exist).load do  
   def capify_ec2
@@ -16,15 +15,24 @@ Capistrano::Configuration.instance(:must_exist).load do
 
     desc "Deregisters instance from its ELB"
     task :deregister_instance do
-      instance_name = variables[:logger].instance_variable_get("@options")[:actions].first
-      capify_ec2.deregister_instance_from_elb(instance_name)
+      if self[:ec2_instance_name]
+        capify_ec2.deregister_instance_from_elb(fetch(:ec2_instance_name))
+      else
+        capify_ec2.desired_instances.each do |instance|
+          capify_ec2.deregister_instance_from_elb(instance.name)
+        end
+      end
     end
 
     desc "Registers an instance with an ELB."
     task :register_instance do
-      instance_name = variables[:logger].instance_variable_get("@options")[:actions].first
-      load_balancer_name = variables[:logger].instance_variable_get("@options")[:vars][:loadbalancer]
-      capify_ec2.register_instance_in_elb(instance_name, load_balancer_name)
+      if self[:ec2_instance_name]
+        capify_ec2.register_instance_in_elb(fetch(:ec2_instance_name), get_loadbalancer_name)
+      else
+        capify_ec2.desired_instances.each do |instance|
+          capify_ec2.register_instance_in_elb(instance.name, get_loadbalancer_name)
+        end
+      end
     end
 
     task :date do
@@ -201,32 +209,12 @@ Capistrano::Configuration.instance(:must_exist).load do
   end
 
   def ec2_roles(*roles)
-    server_name = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
-    
-    if !server_name.nil? && !server_name.empty?
-      named_instance = capify_ec2.get_instance_by_name(server_name)
-  
-      task named_instance.name.to_sym do
-        remove_default_roles
-        server_address = named_instance.contact_point
-
-        if named_instance.respond_to?(:roles)
-          roles = named_instance.roles
-        else
-          roles = [named_instance.tags[ @ec2_config[:aws_roles_tag] ]].flatten
-        end    
-        
-        roles.each do |role|
-          define_role({:name => role, :options => {:on_no_matching_servers => :continue}}, named_instance)
-        end
-      end unless named_instance.nil?
-    end
-    roles.each {|role| ec2_role(role)}
+    roles.each {|role| ec2_role role }
   end
-  
+
   def ec2_role(role_name_or_hash)
     role = role_name_or_hash.is_a?(Hash) ? role_name_or_hash : {:name => role_name_or_hash, :options => {}, :variables => {}}
-        
+
     instances = capify_ec2.get_instances_by_role(role[:name])
     if role[:options] && role[:options].delete(:default)
       instances.each do |instance|
@@ -240,8 +228,8 @@ Capistrano::Configuration.instance(:must_exist).load do
     end unless regions.nil?
 
     define_role_roles(role, instances)
-    define_instance_roles(role, instances)
-  end  
+    define_instance_roles(instances)
+  end
 
   def define_regions(region, role)
     instances = []
@@ -257,12 +245,24 @@ Capistrano::Configuration.instance(:must_exist).load do
     end
   end
 
-  def define_instance_roles(role, instances)
+  def define_instance_roles(instances)
     instances.each do |instance|
       task instance.name.to_sym do
         remove_default_roles
-        define_role(role, instance)
-      end
+
+        if instance.respond_to?(:roles)
+          roles = instance.roles
+        else
+          roles = [instance.tags[@ec2_config[:aws_roles_tag]]].flatten
+        end
+
+        roles.map{|role| role.split(',')}.flatten.each do |role|
+          role.strip!
+          define_role({:name => role, :options => {:on_no_matching_servers => :continue}}, instance)
+        end
+
+        set :ec2_instance_name, instance.name
+      end unless tasks[instance.name.to_sym]
     end
   end
 
@@ -272,7 +272,7 @@ Capistrano::Configuration.instance(:must_exist).load do
       instances.each do |instance|
         define_role(role, instance)
       end
-    end 
+    end
   end
 
   def define_role(role, instance)
@@ -312,5 +312,8 @@ Capistrano::Configuration.instance(:must_exist).load do
   def remove_default_roles	 	
     roles.reject! { true }
   end
-  
+
+  def get_loadbalancer_name
+    self[:loadbalancer] || variables[:logger].instance_variable_get("@options")[:vars][:loadbalancer]
+  end
 end
