@@ -341,7 +341,33 @@ In this example, the following URL would be generated:
 http://EC2_INSTANCE_PUBLIC_DNS_HERE:80/status
 ```
 
-And the contents of the page at that URL must match 'OK' for the healthcheck to pass. If unsuccessful, the healthcheck is repeated every second, until a timeout of 60 seconds is reached, at which point the rolling deployment is aborted, and a progress summary displayed.
+And the contents of the page at that URL must match 'OK' exactly for the healthcheck to pass. If unsuccessful, the healthcheck is repeated every second, until a timeout of 60 seconds is reached, at which point the rolling deployment is aborted, and a progress summary displayed.
+
+The result can also be specified as a regular expression, which gives more flexibility. For example:
+
+```ruby
+ec2_roles :name => "web",
+          :variables => {
+            :healthcheck => {
+              :path   => '/status',
+              :port   => 80,
+              :result => /^(OK|Success)$/
+            }
+          }
+```
+
+The result can also be specified as an array (of strings and/or regular expressions), in which case the result of the health check is successful if the response matches any of the items in the array. For example:
+
+```ruby
+ec2_roles :name => "web",
+          :variables => {
+            :healthcheck => {
+              :path   => '/status',
+              :port   => 80,
+              :result => ['OK', /^\s*Success/]
+            }
+          }
+```
 
 The default timeout of 60 seconds can be overridden by setting ':timeout' to a custom value in seconds. The protocol used defaults to 'http://', however you can switch to 'https://' by setting ':https' equal to 'true'. For example:
 
