@@ -1,3 +1,13 @@
+## 1.4.3.pre5 (Apr 9, 2013)
+
+Features:
+  
+  - Allowed the expected result for the rolling deployment healthcheck to be specified as a regex or an array in addition to a string.
+
+Bugfixes:
+
+  - Fixed an issue which was preventing the main deployment task from being executed during a rolling deployment.
+
 ## 1.4.2.pre4 (Mar 28, 2013)
 
 Features:
