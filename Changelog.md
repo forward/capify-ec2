@@ -1,3 +1,9 @@
+## 1.4.3.pre6 (Apr 9, 2013)
+
+Bugfixes:
+
+  - Fixed an issue with healthcheck expected response output.
+
 ## 1.4.3.pre5 (Apr 9, 2013)
 
 Features:
