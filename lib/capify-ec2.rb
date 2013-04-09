@@ -232,7 +232,7 @@ class CapifyEc2
     protocol = options[:https] ? 'https://' : 'http://'
     uri = URI("#{protocol}#{dns}:#{port}#{path}")
 
-    puts "[Capify-EC2] Checking '#{uri}' for the content '#{expected_response}'..."    
+    puts "[Capify-EC2] Checking '#{uri}' for the content '#{expected_response.inspect}'..."    
 
     http = Net::HTTP.new(uri.host, uri.port)
     result = nil
