@@ -105,7 +105,7 @@ Capistrano::Configuration.instance(:must_exist).load do
         load_balancer_to_reregister = capify_ec2.deregister_instance_from_elb_by_dns(server_dns) if is_load_balanced
         
         # Call the standard 'cap deploy' task with our redefined role containing a single server.
-        # top.deploy.default
+        top.deploy.default
 
         server_roles.each do |a_role|
           
