@@ -235,6 +235,8 @@ class CapifyEc2
     puts "[Capify-EC2] Checking '#{uri}' for the content '#{expected_response.inspect}'..."    
 
     http = Net::HTTP.new(uri.host, uri.port)
+    http.open_timeout = 5
+    
     result = nil
 
     begin
