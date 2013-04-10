@@ -31,9 +31,9 @@ class CapifyEc2
     
     @instances = []
     regions.each do |region|
-      Fog::Compute.new(:provider => 'AWS', 
-                       :aws_access_key_id => @ec2_config[:aws_access_key_id], 
-                       :aws_secret_access_key => @ec2_config[:aws_secret_access_key], 
+      Fog::Compute.new(:provider => 'AWS',
+                       :aws_access_key_id => aws_access_key_id,
+                       :aws_secret_access_key => aws_secret_access_key,
                        :region => region).servers.each do |server|
         @instances << server if server.ready?
       end
@@ -43,7 +43,15 @@ class CapifyEc2
   def determine_regions()
     @ec2_config[:aws_params][:regions] || [@ec2_config[:aws_params][:region]]
   end
-    
+
+  def aws_access_key_id
+    @ec2_config[:aws_access_key_id] || ENV['AWS_ACCESS_KEY_ID']
+  end
+
+  def aws_secret_access_key
+    @ec2_config[:aws_secret_access_key] || ENV['AWS_SECRET_ACCESS_KEY']
+  end
+
   def display_instances
     # Set minimum widths for the variable length instance attributes.
     column_widths = { :name_min => 4, :type_min => 4, :dns_min => 5, :roles_min => 5, :options_min => 6 }
@@ -109,9 +117,9 @@ class CapifyEc2
   end
     
   def elb
-    Fog::AWS::ELB.new(:aws_access_key_id => @ec2_config[:aws_access_key_id], :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => @ec2_config[:aws_params][:region])
-  end 
-  
+    Fog::AWS::ELB.new(:aws_access_key_id => aws_access_key_id, :aws_secret_access_key => aws_secret_access_key, :region => @ec2_config[:aws_params][:region])
+  end
+
   def get_load_balancer_by_instance(instance_id)
     hash = elb.load_balancers.inject({}) do |collect, load_balancer|
       load_balancer.instances.each {|load_balancer_instance_id| collect[load_balancer_instance_id] = load_balancer}
