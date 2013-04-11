@@ -1,3 +1,9 @@
+## 1.4.3.pre7 (Apr 11, 2013)
+
+Bugfixes:
+
+  - Exit with status 1 when encountering rolling deployment errors, afer displaying the deployment status overview.
+
 ## 1.4.3.pre6 (Apr 9, 2013)
 
 Bugfixes:
