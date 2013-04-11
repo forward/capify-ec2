@@ -103,12 +103,12 @@ Capistrano::Configuration.instance(:must_exist).load do
         puts "[Capify-EC2] Beginning deployment to #{instance_dns_with_name_tag(server_dns)} with #{server_roles.count > 1 ? 'roles' : 'role'} '#{server_roles.join(', ')}'...".bold
 
         load_balancer_to_reregister = capify_ec2.deregister_instance_from_elb_by_dns(server_dns) if is_load_balanced
-        
+
         # Call the standard 'cap deploy' task with our redefined role containing a single server.
         top.deploy.default
 
         server_roles.each do |a_role|
-          
+        
           # If healthcheck(s) are defined for this role, run them.
           if all_roles[a_role][:options][:healthcheck]
             healthchecks_for_role = [ all_roles[a_role][:options][:healthcheck] ].flatten
@@ -156,17 +156,27 @@ Capistrano::Configuration.instance(:must_exist).load do
       puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
       puts "[Capify-EC2]" if load_balancer_to_reregister
       puts "[Capify-EC2] Note: Instance '#{instance_dns_with_name_tag(e.dns)}' was removed from the ELB '#{load_balancer_to_reregister.id}' and should be manually checked and reregistered.".red.bold if load_balancer_to_reregister
+
+      rolling_deploy_status(all_servers, successful_deploys, failed_deploys)
+      exit 1
     rescue => e
       failed_deploys << roles.values.first.servers.first.host
       puts "[Capify-EC2]"
       puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
       puts "[Capify-EC2]" if load_balancer_to_reregister
       puts "[Capify-EC2] Note: Instance '#{instance_dns_with_name_tag(roles.values.first.servers.first.host)}' was removed from the ELB '#{load_balancer_to_reregister.id}' and should be manually checked and reregistered.".red.bold if load_balancer_to_reregister
+
+      rolling_deploy_status(all_servers, successful_deploys, failed_deploys)
+      exit 1
     else
       puts "[Capify-EC2]"
       puts "[Capify-EC2] Rolling deployment completed.".green.bold  
-    end
 
+      rolling_deploy_status(all_servers, successful_deploys, failed_deploys)
+    end
+  end
+
+  def rolling_deploy_status(all_servers, successful_deploys, failed_deploys)
     puts "[Capify-EC2]"
     puts "[Capify-EC2]   Successful servers:"
     format_rolling_deploy_results( all_servers, successful_deploys )
