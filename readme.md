@@ -226,9 +226,28 @@ end
 As mentioned in the 'EC2 Tags' section, creating an 'Options' tag on your EC2 instances will define those options as 'true' for the associated instance. This allows you to refine your capistrano tasks.
 For example, if we had the following group of instances in EC2:
 
-    server-A Tags: Name => "server-A", Roles => "web"
-    server-B Tags: Name => "server-B", Roles => "web"
-    server-C Tags: Name => "server-C", Roles => "web", Options => "worker"
+<table>
+  <tr>
+    <td>'Name' Tag</td>
+    <td>'Roles' Tag</td>
+    <td>'Options' Tag</td>
+  </tr>
+  <tr>
+    <td>server-A</td>
+    <td>web</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>server-B</td>
+    <td>web</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>server-C</td>
+    <td>web</td>
+    <td>worker</td>
+  </tr>
+</table>
 
 You could then create a task in your 'deploy.rb' that will only be executed on the worker machine, like so:
 
