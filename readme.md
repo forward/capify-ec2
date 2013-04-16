@@ -252,8 +252,8 @@ For example, if we had the following group of instances in EC2:
 You could then create a task in your 'deploy.rb' that will only be executed on the worker machine, like so:
 
 ```ruby
-task :reload_workers => :web, :only=>{:worker} do
-  # Do something to a server with cron on it
+task :reload_workers => :web, :only=>{:worker=>true} do
+  # Do something to a specific server with the 'worker' option in it's EC2 tags.
 end
 ```
 
@@ -265,7 +265,13 @@ As well as defining Options at an instance level via EC2 tags, you can define an
 ec2_roles {:name=>"web", :options=>{:worker=>"server-C"}}
 ```
 
-In this case, you set the value of ':worker' equal to the instance name you want to be a worker.
+In this case, you set the value of ':worker' equal to the instance name you want to be a worker. The task definition remains the same:
+
+```ruby
+task :reload_workers => :web, :only=>{:worker=>true} do
+  # Do something to a specific server whose instance name is equal to the 'worker' option in the role definition.
+end
+```
 
 
 
