@@ -38,32 +38,36 @@ class CapifyEc2
 
     regions.each do |region|
       begin
-        servers = Fog::Compute.new( :provider => 'AWS',
-                                    :aws_access_key_id => aws_access_key_id,
-                                    :aws_secret_access_key => aws_secret_access_key,
-                                    :region => region
-                                  ).servers
+        servers = Fog::Compute.new( {:provider => 'AWS', :region => region}.merge!(security_credentials) ).servers
       rescue => e
         puts "[Capify-EC2] Unable to connect to AWS: #{e}.".red.bold
         exit 1
       end
-
+      
       servers.each do |server|
         @instances << server if server.ready?
       end
     end
-  end 
+  end
+
+  def security_credentials
+    if @ec2_config[:use_iam_profile]
+      {use_iam_profile: true}
+    else
+      {aws_access_key_id: @ec2_config[:aws_access_key_id], aws_secret_access_key: @ec2_config[:aws_secret_access_key] }
+    end
+  end
   
   def determine_regions()
     @ec2_config[:aws_params][:regions] || [@ec2_config[:aws_params][:region]]
   end
 
   def aws_access_key_id
-    @ec2_config[:aws_access_key_id] || Fog.credentials[:aws_access_key_id] || ENV['AWS_ACCESS_KEY_ID'] || raise("Missing AWS Access Key ID")
+    @ec2_config[:aws_access_key_id] || Fog.credentials[:aws_access_key_id] || ENV['AWS_ACCESS_KEY_ID'] || @ec2_config[:use_iam_profile] || raise("Missing AWS Access Key ID")
   end
 
   def aws_secret_access_key
-    @ec2_config[:aws_secret_access_key] || Fog.credentials[:aws_secret_access_key] || ENV['AWS_SECRET_ACCESS_KEY'] || raise("Missing AWS Secret Access Key")
+    @ec2_config[:aws_secret_access_key] || Fog.credentials[:aws_secret_access_key] || ENV['AWS_SECRET_ACCESS_KEY'] || @ec2_config[:use_iam_profile] || raise("Missing AWS Secret Access Key")
   end
 
   def display_instances
@@ -141,7 +145,7 @@ class CapifyEc2
   end
     
   def elb
-    Fog::AWS::ELB.new(:aws_access_key_id => aws_access_key_id, :aws_secret_access_key => aws_secret_access_key, :region => @ec2_config[:aws_params][:region])
+    Fog::AWS::ELB.new({:region => @ec2_config[:aws_params][:region]}.merge!(security_credentials))
   end 
 
   def get_load_balancer_by_instance(instance_id)

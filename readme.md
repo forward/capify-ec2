@@ -31,7 +31,7 @@ require "capify-ec2/capistrano"
 
 #### Configuration
 
-Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you provide them via the two alternative methods detailed below under 'AWS Credentials'. ':region' is also required. Other settings are optional.
+Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you provide them via the two alternative methods detailed below under 'AWS Credentials' or have the use_iam_profile option set to use IAM roles. ':region' is also required. Other settings are optional.
 
 * :project_tag
 
@@ -62,6 +62,11 @@ Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you
   When ':load_balanced' is set to 'true', Capify-EC2 uses pre and post-deploy hooks to deregister the instance from an associated Elastic Load Balancer, perform the actual deploy, then finally reregister with the ELB and validated the instance health.
   Note: This options only applies to deployments made to an individual instance, using the command 'cap INSTANCE_NAME_HERE deploy' - it doesn't apply to roles.
 
+* :use_iam_profile
+
+  Use this option to use IAM roles on your box for authentication rather than an access id and key
+
+
 ##### AWS Credentials
 
 ###### Via YML Configuration
@@ -75,6 +80,10 @@ If you wish, you can have Capify-EC2 use the AWS credentials found in your Fog c
 ###### Via Environment Variables
 
 If you wish, you can define AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as environment variables, instead of specifying ':aws_access_key_id' and ':aws_secret_access_key' in the YML configuration file.
+
+###### Via AWS IAM Roles
+
+If you have IAM roles set up on your box to allow querying EC2 information you tell Fog to use IAM roles and you will not need to provide any credentials at runtime.  For more information on IAM roles read Amazon's documentation at http://aws.amazon.com/iam/
 
 ###### Ordering
 
