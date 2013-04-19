@@ -1,3 +1,61 @@
+## 1.4.3.pre7 (Apr 11, 2013)
+
+Bugfixes:
+
+  - Exit with status 1 when encountering rolling deployment errors, afer displaying the deployment status overview.
+
+## 1.4.3.pre6 (Apr 9, 2013)
+
+Bugfixes:
+
+  - Fixed an issue with healthcheck expected response output.
+
+## 1.4.3.pre5 (Apr 9, 2013)
+
+Features:
+  
+  - Allowed the expected result for the rolling deployment healthcheck to be specified as a regex or an array in addition to a string.
+
+Bugfixes:
+
+  - Fixed an issue which was preventing the main deployment task from being executed during a rolling deployment.
+
+## 1.4.2.pre4 (Mar 28, 2013)
+
+Features:
+
+  - Added the ability to run multiple healthchecks per role by specifying an array of them when defining the role.
+  - Improved readability of output from rolling deployments.
+
+Bugfixes:
+
+  - Error handling improved when working with the 'ec2:ssh' command.
+
+
+## 1.4.1.pre3 (Mar 1, 2013)
+
+Features:
+
+  - Added the ability to automatically deregister and reregister an instance from its associated Elastic Load Balancer when using the rolling deployment feature.
+
+Bugfixes:
+
+  - Instance options are now properly retained when performing a rolling deployment.
+  - Fixed a range of errors in the documentation.
+
+## 1.4.0.pre2 (Feb 15, 2013)
+
+Features:
+
+  - Minimum Capistrano version required set to v2.14 or greater. This fixes several issues, including an exception being thrown when a task was limited to certain roles, which weren't specified during deployment. For example, a task limited to ':roles => [:web]' would raise an exception if you tried to run 'cap db deploy', as no roles would match.
+
+## 1.4.0.pre1 (Feb 15, 2013)
+
+Features:
+
+  - New rolling deployment mode, allows you to deploy to your instances in serial, rather than in parallel, with an option to perform a healthcheck before proceeding to the next instance. For more information on this feature, check out the [documentation](readme.md#rolling-deployments).
+  - The documentation has been rewritten to make it clearer how to use Capify-EC2 and what the available options are.
+
 ## 1.3.7 (Jan 20, 2013)
 
   - Make the behaviour for passing hash/filename consistent

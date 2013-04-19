@@ -1,5 +1,6 @@
 require File.join(File.dirname(__FILE__), '../capify-ec2')
 require 'colored'
+require 'pp'
 
 Capistrano::Configuration.instance(:must_exist).load do  
   def capify_ec2
@@ -34,24 +35,162 @@ Capistrano::Configuration.instance(:must_exist).load do
     task :server_names do
       puts capify_ec2.server_names.sort
     end
-    
+
     desc "Allows ssh to instance by id. cap ssh <INSTANCE NAME>"
     task :ssh do
       server = variables[:logger].instance_variable_get("@options")[:actions][1]
-      instance = numeric?(server) ? capify_ec2.desired_instances[server.to_i] : capify_ec2.get_instance_by_name(server)
-      port = ssh_options[:port] || 22 
-      command = "ssh -p #{port} #{user}@#{instance.contact_point}"
-      puts "Running `#{command}`"
-      exec(command)
+      
+      if server
+        instance = numeric?(server) ? capify_ec2.desired_instances[server.to_i] : capify_ec2.get_instance_by_name(server)
+
+        if instance and instance.contact_point then
+          port = ssh_options[:port] || 22 
+          command = "ssh -p #{port} #{user}@#{instance.contact_point}"
+          puts "Running `#{command}`"
+          exec(command)
+        else
+          puts "[Capify-EC2] Error: No instances were found with instance number '#{server}'.".bold.red
+          exit 1
+        end
+      else
+        puts "[Capify-EC2] Error: You did not specify the instance number, which can be found via the 'ec2:status' command as follows:".bold.red
+        top.ec2.status
+      end
     end
   end
-  
+
   namespace :deploy do
     before "deploy", "ec2:deregister_instance"
     after "deploy", "ec2:register_instance"
     after "deploy:rollback", "ec2:register_instance"
   end
     
+  desc "Deploy to servers one at a time."
+  task :rolling_deploy do
+    puts "[Capify-EC2] Performing rolling deployment..."
+
+    all_servers       = {}
+    all_roles         = {}
+
+    roles.each do |role|
+      role[1].servers.each do |s|
+        all_servers[ s.host.to_s ] ||= []
+        all_servers[ s.host.to_s ] << role[0]
+        all_roles[ role[0] ] = {:options => (s.options ||= nil)} unless all_roles[ role[0] ]
+      end
+    end
+
+    successful_deploys = []
+    failed_deploys     = []
+
+    # Here outside of the scope of the rescue so we can refer to it if a general exception is raised.
+    load_balancer_to_reregister = nil
+
+    begin
+      all_servers.each do |server_dns,server_roles|
+
+        roles.clear
+
+        load_balancer_to_reregister = nil # Set to nil again here, to ensure it always starts off nil for every iteration.
+        is_load_balanced = false
+
+        server_roles.each do |a_role|
+          role a_role, server_dns, all_roles[a_role][:options]
+          is_load_balanced = true if all_roles[a_role][:options][:load_balanced]
+        end
+        
+        puts "[Capify-EC2]"
+        puts "[Capify-EC2] Beginning deployment to #{instance_dns_with_name_tag(server_dns)} with #{server_roles.count > 1 ? 'roles' : 'role'} '#{server_roles.join(', ')}'...".bold
+
+        load_balancer_to_reregister = capify_ec2.deregister_instance_from_elb_by_dns(server_dns) if is_load_balanced
+
+        # Call the standard 'cap deploy' task with our redefined role containing a single server.
+        top.deploy.default
+
+        server_roles.each do |a_role|
+        
+          # If healthcheck(s) are defined for this role, run them.
+          if all_roles[a_role][:options][:healthcheck]
+            healthchecks_for_role = [ all_roles[a_role][:options][:healthcheck] ].flatten
+
+            puts "[Capify-EC2] Starting #{pluralise(healthchecks_for_role.size, 'healthcheck')} for role '#{a_role}'..."
+
+            healthchecks_for_role.each_with_index do |healthcheck_for_role, i|
+              options = {}
+              options[:https]   = healthcheck_for_role[:https]   ||= false
+              options[:timeout] = healthcheck_for_role[:timeout] ||= 60
+
+              healthcheck = capify_ec2.instance_health_by_url( server_dns,
+                                                               healthcheck_for_role[:port], 
+                                                               healthcheck_for_role[:path], 
+                                                               healthcheck_for_role[:result], 
+                                                               options )
+              if healthcheck
+                puts "[Capify-EC2] Healthcheck #{i+1} of #{healthchecks_for_role.size} for role '#{a_role}' successful.".green.bold
+              else
+                puts "[Capify-EC2] Healthcheck #{i+1} of #{healthchecks_for_role.size} for role '#{a_role}' failed!".red.bold
+                raise CapifyEC2RollingDeployError.new("Healthcheck timeout exceeded", server_dns)
+              end
+            end
+          end
+
+        end
+
+        if load_balancer_to_reregister
+          reregistered = capify_ec2.reregister_instance_with_elb_by_dns(server_dns, load_balancer_to_reregister, 60)
+          if reregistered
+            puts "[Capify-EC2] Instance registration with ELB '#{load_balancer_to_reregister.id}' successful.".green.bold
+          else
+            puts "[Capify-EC2] Instance registration with ELB '#{load_balancer_to_reregister.id}' failed!".red.bold
+            raise CapifyEC2RollingDeployError.new("ELB registration timeout exceeded", server_dns)
+          end
+        end
+   
+        puts "[Capify-EC2] Deployment successful to #{instance_dns_with_name_tag(server_dns)}.".green.bold
+        successful_deploys << server_dns
+
+      end
+    rescue CapifyEC2RollingDeployError => e
+      failed_deploys << e.dns
+      puts "[Capify-EC2]"
+      puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
+      puts "[Capify-EC2]" if load_balancer_to_reregister
+      puts "[Capify-EC2] Note: Instance '#{instance_dns_with_name_tag(e.dns)}' was removed from the ELB '#{load_balancer_to_reregister.id}' and should be manually checked and reregistered.".red.bold if load_balancer_to_reregister
+
+      rolling_deploy_status(all_servers, successful_deploys, failed_deploys)
+      exit 1
+    rescue => e
+      failed_deploys << roles.values.first.servers.first.host
+      puts "[Capify-EC2]"
+      puts "[Capify-EC2] Deployment aborted due to error: #{e}!".red.bold
+      puts "[Capify-EC2]" if load_balancer_to_reregister
+      puts "[Capify-EC2] Note: Instance '#{instance_dns_with_name_tag(roles.values.first.servers.first.host)}' was removed from the ELB '#{load_balancer_to_reregister.id}' and should be manually checked and reregistered.".red.bold if load_balancer_to_reregister
+
+      rolling_deploy_status(all_servers, successful_deploys, failed_deploys)
+      exit 1
+    else
+      puts "[Capify-EC2]"
+      puts "[Capify-EC2] Rolling deployment completed.".green.bold  
+
+      rolling_deploy_status(all_servers, successful_deploys, failed_deploys)
+    end
+  end
+
+  def rolling_deploy_status(all_servers, successful_deploys, failed_deploys)
+    puts "[Capify-EC2]"
+    puts "[Capify-EC2]   Successful servers:"
+    format_rolling_deploy_results( all_servers, successful_deploys )
+     
+    puts "[Capify-EC2]"
+    puts "[Capify-EC2]   Failed servers:"
+    format_rolling_deploy_results( all_servers, failed_deploys )
+    
+    puts "[Capify-EC2]"
+    puts "[Capify-EC2]   Pending servers:"
+    pending_deploys = (all_servers.keys - successful_deploys) - failed_deploys
+    format_rolling_deploy_results( all_servers, pending_deploys )
+  end
+
   def ec2_roles(*roles)
     server_name = variables[:logger].instance_variable_get("@options")[:actions].first unless variables[:logger].instance_variable_get("@options")[:actions][1].nil?
     
@@ -130,22 +269,35 @@ Capistrano::Configuration.instance(:must_exist).load do
   def define_role(role, instance)
     options     = role[:options] || {}
     variables   = role[:variables] || {}
-    
+
     cap_options = options.inject({}) do |cap_options, (key, value)| 
       cap_options[key] = true if value.to_s == instance.name
       cap_options
     end 
-    
+
     ec2_options = instance.tags["Options"] || ""
     ec2_options.split(%r{,\s*}).compact.each { |ec2_option|  cap_options[ec2_option.to_sym] = true }
-    
-    variables.each { |key, value| set key, value }
+
+    variables.each do |key, value| 
+      set key, value
+      cap_options[key] = value unless cap_options.has_key? key
+    end
 
     role role[:name].to_sym, instance.contact_point, cap_options
   end
   
   def numeric?(object)
     true if Float(object) rescue false
+  end
+
+  def pluralise(n, singular, plural=nil)
+    if n == 1
+        "#{singular}"
+    elsif plural
+        "#{plural}"
+    else
+        "#{singular}s"
+    end
   end
   
   def remove_default_roles	 	

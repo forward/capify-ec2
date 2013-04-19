@@ -6,11 +6,11 @@ Gem::Specification.new do |s|
   s.name        = "capify-ec2"
   s.version     = Capify::Ec2::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["Noah Cantor", "Siddharth Dawara"]
-  s.email       = ["noah.cantor@forward.co.uk", "siddharth.dawara@forward.co.uk"]
+  s.authors     = ["Noah Cantor", "Siddharth Dawara", "Jon Spalding", "Ryan Conway"]
+  s.email       = ["capify-ec2@forwardtechnology.co.uk"]
   s.homepage    = "http://github.com/forward/capify-ec2"
-  s.summary     = %q{Grabs roles from ec2's tags and autogenerates capistrano tasks}
-  s.description = %q{Grabs roles from ec2's tags and autogenerates capistrano tasks}
+  s.summary     = %q{Capify-EC2 is used to generate Capistrano namespaces and tasks from Amazon EC2 instance tags, dynamically building the list of servers to be deployed to.}
+  s.description = %q{Capify-EC2 is used to generate Capistrano namespaces and tasks from Amazon EC2 instance tags, dynamically building the list of servers to be deployed to.}
 
   s.rubyforge_project = "capify-ec2"
 
@@ -20,5 +20,5 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.add_dependency('fog', '=1.3.1')
   s.add_dependency('colored', '=1.2')
-  s.add_dependency('capistrano')
+  s.add_dependency('capistrano', '~> 2.14')
 end

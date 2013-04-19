@@ -45,6 +45,11 @@ class CapifyEc2
   end
     
   def display_instances
+    unless desired_instances and desired_instances.any?
+      puts "[Capify-EC2] No instances were found using your 'ec2.yml' configuration.".red.bold
+      return
+    end
+    
     # Set minimum widths for the variable length instance attributes.
     column_widths = { :name_min => 4, :type_min => 4, :dns_min => 5, :roles_min => 5, :options_min => 6 }
 
@@ -57,7 +62,7 @@ class CapifyEc2
 
     # Title row.
     puts sprintf "%-3s   %s   %s   %s   %s   %s   %s   %s", 
-      '',
+      'Num'                                     .bold,
       'Name'   .ljust( column_widths[:name]    ).bold,
       'ID'     .ljust( 10                      ).bold,
       'Type'   .ljust( column_widths[:type]    ).bold,
@@ -104,6 +109,10 @@ class CapifyEc2
     desired_instances.select {|instance| instance.name == name}.first
   end
     
+  def get_instance_by_dns(dns)
+    desired_instances.select {|instance| instance.dns_name == dns}.first
+  end
+
   def instance_health(load_balancer, instance)
     elb.describe_instance_health(load_balancer.id, instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
   end
@@ -111,7 +120,7 @@ class CapifyEc2
   def elb
     Fog::AWS::ELB.new(:aws_access_key_id => @ec2_config[:aws_access_key_id], :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => @ec2_config[:aws_params][:region])
   end 
-  
+
   def get_load_balancer_by_instance(instance_id)
     hash = elb.load_balancers.inject({}) do |collect, load_balancer|
       load_balancer.instances.each {|load_balancer_instance_id| collect[load_balancer_instance_id] = load_balancer}
@@ -119,7 +128,7 @@ class CapifyEc2
     end
     hash[instance_id]
   end
-  
+
   def get_load_balancer_by_name(load_balancer_name)
     lbs = {}
     elb.load_balancers.each do |load_balancer|
@@ -164,5 +173,104 @@ class CapifyEc2
     else
       STDERR.puts "#{instance.name}: tests timed out after #{time_elapsed} seconds."
     end
+  end
+
+  def deregister_instance_from_elb_by_dns(server_dns)
+    instance = get_instance_by_dns(server_dns)
+    load_balancer = get_load_balancer_by_instance(instance.id)
+
+    if load_balancer
+      puts "[Capify-EC2] Removing instance from ELB '#{load_balancer.id}'..."
+
+      result = elb.deregister_instances_from_load_balancer(instance.id, load_balancer.id)
+      raise "Unable to remove instance from ELB '#{load_balancer.id}'..." unless result.status == 200
+
+      return load_balancer
+    end
+    false
+  end
+
+  def reregister_instance_with_elb_by_dns(server_dns, load_balancer, timeout)
+    instance = get_instance_by_dns(server_dns)
+
+    sleep 10
+
+    puts "[Capify-EC2] Re-registering instance with ELB '#{load_balancer.id}'..."
+    result = elb.register_instances_with_load_balancer(instance.id, load_balancer.id)
+
+    raise "Unable to re-register instance with ELB '#{load_balancer.id}'..." unless result.status == 200
+
+    state = nil
+
+    begin
+      Timeout::timeout(timeout) do
+        begin
+          state = instance_health(load_balancer, instance)
+          raise "Instance not ready" unless state == 'InService'
+        rescue => e
+          puts "[Capify-EC2] Unexpected response: #{e}..."
+          sleep 1
+          retry
+        end
+      end
+    rescue Timeout::Error => e
+    end
+    state ? state == 'InService' : false
+  end
+
+  def instance_health_by_url(dns, port, path, expected_response, options = {})
+    def response_matches_expected?(response, expected_response)
+      if expected_response.kind_of?(Array)
+        expected_response.any?{ |r| response_matches_expected?(response, r) }
+      elsif expected_response.kind_of?(Regexp)
+        (response =~ expected_response) != nil
+      else
+        response == expected_response
+      end
+    end
+
+    protocol = options[:https] ? 'https://' : 'http://'
+    uri = URI("#{protocol}#{dns}:#{port}#{path}")
+
+    puts "[Capify-EC2] Checking '#{uri}' for the content '#{expected_response.inspect}'..."    
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    result = nil
+
+    begin
+      Timeout::timeout(options[:timeout]) do
+        begin
+          result = http.get(uri.path)
+          raise "Server responded with '#{result.code}: #{result.body}', expected '#{expected_response}'" unless response_matches_expected?(result.body, expected_response)
+        rescue => e
+          puts "[Capify-EC2] Unexpected response: #{e}..."
+          sleep 1
+          retry
+        end
+      end
+    rescue Timeout::Error => e
+    end
+    result ? response_matches_expected?(result.body, expected_response) : false
+  end
+end
+
+def instance_dns_with_name_tag(dns)
+  name_tag     = ''
+  current_node = capify_ec2.desired_instances.select { |instance| instance.dns_name == dns }
+  name_tag     = current_node.first.tags['Name'] unless current_node.empty?
+  "#{dns} (#{name_tag})"
+end
+
+def format_rolling_deploy_results(all_servers, results)
+  puts '[Capify-EC2]      None.' unless results.any?
+  results.each {|server| puts "[Capify-EC2]      #{instance_dns_with_name_tag(server)} with #{all_servers[server].count >1 ? 'roles' : 'role'} '#{all_servers[server].join(', ')}'."}
+end
+
+class CapifyEC2RollingDeployError < Exception
+  attr_reader :dns
+
+  def initialize(msg, dns)
+    super(msg)
+    @dns = dns
   end
 end
