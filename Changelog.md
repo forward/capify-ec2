@@ -1,3 +1,9 @@
+## 1.4.6 (May 15, 2013)
+
+Features:
+
+  - Added the ability to specify AWS credentials as environment variables rather than in the 'ec2.yml' file.
+
 ## 1.4.5 (May 15, 2013)
 
 Bugfixes:

@@ -31,11 +31,11 @@ require "capify-ec2/capistrano"
 
 #### Configuration
 
-Note: 'aws_access_key_id', 'aws_secret_access_key', and 'region' are required. Other settings are optional.
+Note: ':aws_access_key_id', ':aws_secret_access_key', and ':region' are required. Other settings are optional.
 
 * :project_tag
 
-  If this is defined, Capify-EC2 will only create namespaces and tasks for the EC2 instances that have a matching 'Project' tag. By default, all instances available to the configured AWS access key will be used.
+  If this is defined, Capify-EC2 will only create namespaces and tasks for the EC2 instances that have a matching 'Project' tag. By default, all instances available to the specified AWS access key will be used.
 
   It is possible to include multiple projects simultaneously by using the :project_tags parameter, like so: 
 
@@ -57,6 +57,10 @@ Note: 'aws_access_key_id', 'aws_secret_access_key', and 'region' are required. O
 * :aws_options_tag
 
   Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance options. Defaults to 'Options' if ommited.
+
+##### Via Environment Variables
+
+If you wish, you can define AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as environment variables, instead of specifying ':aws_access_key_id' and ':aws_secret_access_key' in the YML configuration file.
 
 
 
@@ -154,6 +158,7 @@ task :db do
   role :db, SERVER-3_EC2_PUBLIC_DNS_HERE
 end
 ```
+
 
 
 #### Multiple Roles
