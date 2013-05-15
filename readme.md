@@ -75,9 +75,6 @@ You will need to create instance tags using the AWS Management Console or API, t
 * Tag 'Options'
 
   A comma seperated list of options which will be defined as 'true' for that instance. See the 'Options' section below for more information on their use.
-  task :bob, :only => {:option_nmame => true}
-  on_no_matching_servers => :continue
-  "one of those ten is cron" etc.
 
 
 
@@ -257,8 +254,14 @@ For example, if we had the following group of instances in EC2:
 You could then create a task in your 'deploy.rb' that will only be executed on the worker machine, like so:
 
 ```ruby
-task :reload_workers => :web, :only=>{:worker=>true} do
+task :reload_workers, :only=>{:worker=>true} do
   # Do something to a specific server with the 'worker' option in it's EC2 tags.
+end
+```
+
+```ruby
+task :reload_workers, :roles => :app, :only=>{:worker=>true} do
+  # Do something to a specific 'app' server with the 'worker' option in it's EC2 tags.
 end
 ```
 
