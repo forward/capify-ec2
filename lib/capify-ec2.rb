@@ -129,7 +129,7 @@ class CapifyEc2
   end
     
   def elb
-    Fog::AWS::ELB.new(:aws_access_key_id => @ec2_config[:aws_access_key_id], :aws_secret_access_key => @ec2_config[:aws_secret_access_key], :region => @ec2_config[:aws_params][:region])
+    Fog::AWS::ELB.new(:aws_access_key_id => aws_access_key_id, :aws_secret_access_key => aws_secret_access_key, :region => @ec2_config[:aws_params][:region])
   end 
 
   def get_load_balancer_by_instance(instance_id)
