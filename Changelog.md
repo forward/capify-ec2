@@ -1,3 +1,14 @@
+## 1.4.4 (May 15, 2013)
+
+Features:
+
+  - The EC2 instance tag used to determine instance options can now be customised. Defaults to 'Options' if this setting is ommited.
+  - If the 'Roles' or 'Options' tags are customised, this custom text will be used as the appropriate column headers in the 'ec2:status' command.
+
+Bugfixes:
+
+  - Fix some issues with customised 'Roles' tags not being respected in all situations.
+
 ## 1.4.3 (Apr 19, 2013)
 
 Summary of the changes merged from the 'rolling_deploy' branch, from v1.4.0.pre1 to v1.4.3.pre7.

@@ -50,6 +50,14 @@ Note: 'aws_access_key_id', 'aws_secret_access_key', and 'region' are required. O
   When ':load_balanced' is set to 'true', Capify-EC2 uses pre and post-deploy hooks to deregister the instance from an associated Elastic Load Balancer, perform the actual deploy, then finally reregister with the ELB and validated the instance health.
   Note: This options only applies to deployments made to an individual instance, using the command 'cap INSTANCE_NAME_HERE deploy' - it doesn't apply to roles.
 
+* :aws_roles_tag
+
+  Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance roles. Defaults to 'Roles' if ommited.
+
+* :aws_options_tag
+
+  Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance options. Defaults to 'Options' if ommited.
+
 
 
 #### EC2 Tags
