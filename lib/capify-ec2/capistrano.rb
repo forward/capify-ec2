@@ -70,13 +70,15 @@ Capistrano::Configuration.instance(:must_exist).load do
     puts "[Capify-EC2] Performing rolling deployment..."
 
     all_servers       = {}
-    all_roles         = {}
+    all_options       = {}
 
     roles.each do |role|
       role[1].servers.each do |s|
-        all_servers[ s.host.to_s ] ||= []
-        all_servers[ s.host.to_s ] << role[0]
-        all_roles[ role[0] ] = {:options => (s.options ||= nil)} unless all_roles[ role[0] ]
+        server_dns = s.host.to_s
+        all_servers[ server_dns ] ||= []
+        all_servers[ server_dns ] << role[0]
+        all_options[ role[0] ] ||= {}
+        all_options[ role[0] ][ server_dns ] = (s.options || {})
       end
     end
 
@@ -95,8 +97,8 @@ Capistrano::Configuration.instance(:must_exist).load do
         is_load_balanced = false
 
         server_roles.each do |a_role|
-          role a_role, server_dns, all_roles[a_role][:options]
-          is_load_balanced = true if all_roles[a_role][:options][:load_balanced]
+          role a_role, server_dns, all_options[a_role][server_dns]
+          is_load_balanced = true if all_options[a_role][server_dns][:load_balanced]
         end
         
         puts "[Capify-EC2]"
@@ -110,8 +112,8 @@ Capistrano::Configuration.instance(:must_exist).load do
         server_roles.each do |a_role|
         
           # If healthcheck(s) are defined for this role, run them.
-          if all_roles[a_role][:options][:healthcheck]
-            healthchecks_for_role = [ all_roles[a_role][:options][:healthcheck] ].flatten
+          if all_options[a_role][server_dns][:healthcheck]
+            healthchecks_for_role = [ all_options[a_role][server_dns][:healthcheck] ].flatten
 
             puts "[Capify-EC2] Starting #{pluralise(healthchecks_for_role.size, 'healthcheck')} for role '#{a_role}'..."
 
