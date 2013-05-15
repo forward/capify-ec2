@@ -1,3 +1,9 @@
+## 1.4.5 (May 15, 2013)
+
+Bugfixes:
+
+  - Fixed an issue where instances would be removed from their ELB during rolling deployment, even if --dry-run was set.
+
 ## 1.4.4 (May 15, 2013)
 
 Features:
