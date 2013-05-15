@@ -5,7 +5,7 @@ require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
 
 class CapifyEc2
 
-  attr_accessor :load_balancer, :instances
+  attr_accessor :load_balancer, :instances, :ec2_config
   
   unless const_defined? :SLEEP_COUNT
     SLEEP_COUNT = 5
@@ -25,6 +25,9 @@ class CapifyEc2
     @ec2_config[:project_tags] ||= []
     # User can change the Roles tag string
     @ec2_config[:aws_roles_tag] ||= "Roles"
+    # User can change the Options tag string.
+    @ec2_config[:aws_options_tag] ||= "Options"
+
     @ec2_config[:project_tags] << @ec2_config[:project_tag] if @ec2_config[:project_tag]
     
     regions = determine_regions()
@@ -51,36 +54,36 @@ class CapifyEc2
     end
     
     # Set minimum widths for the variable length instance attributes.
-    column_widths = { :name_min => 4, :type_min => 4, :dns_min => 5, :roles_min => 5, :options_min => 6 }
+    column_widths = { :name_min => 4, :type_min => 4, :dns_min => 5, :roles_min => @ec2_config[:aws_roles_tag].length, :options_min => @ec2_config[:aws_options_tag].length }
 
     # Find the longest attribute across all instances, to format the columns properly.
-    column_widths[:name]    = desired_instances.map{|i| i.name.to_s.ljust( column_widths[:name_min] )                               || ' ' * column_widths[:name_min]    }.max_by(&:length).length
-    column_widths[:type]    = desired_instances.map{|i| i.flavor_id                                                                 || ' ' * column_widths[:type_min]    }.max_by(&:length).length
-    column_widths[:dns]     = desired_instances.map{|i| i.contact_point.to_s.ljust( column_widths[:dns_min] )                       || ' ' * column_widths[:dns_min]     }.max_by(&:length).length
-    column_widths[:roles]   = desired_instances.map{|i| i.tags[@ec2_config[:aws_roles_tag]].to_s.ljust( column_widths[:roles_min] ) || ' ' * column_widths[:roles_min]   }.max_by(&:length).length
-    column_widths[:options] = desired_instances.map{|i| i.tags["Options"].to_s.ljust( column_widths[:options_min] )                 || ' ' * column_widths[:options_min] }.max_by(&:length).length
+    column_widths[:name]    = desired_instances.map{|i| i.name.to_s.ljust( column_widths[:name_min] )                                   || ' ' * column_widths[:name_min]    }.max_by(&:length).length
+    column_widths[:type]    = desired_instances.map{|i| i.flavor_id                                                                     || ' ' * column_widths[:type_min]    }.max_by(&:length).length
+    column_widths[:dns]     = desired_instances.map{|i| i.contact_point.to_s.ljust( column_widths[:dns_min] )                           || ' ' * column_widths[:dns_min]     }.max_by(&:length).length
+    column_widths[:roles]   = desired_instances.map{|i| i.tags[@ec2_config[:aws_roles_tag]].to_s.ljust( column_widths[:roles_min] )     || ' ' * column_widths[:roles_min]   }.max_by(&:length).length
+    column_widths[:options] = desired_instances.map{|i| i.tags[@ec2_config[:aws_options_tag]].to_s.ljust( column_widths[:options_min] ) || ' ' * column_widths[:options_min] }.max_by(&:length).length
 
     # Title row.
     puts sprintf "%-3s   %s   %s   %s   %s   %s   %s   %s", 
-      'Num'                                     .bold,
-      'Name'   .ljust( column_widths[:name]    ).bold,
-      'ID'     .ljust( 10                      ).bold,
-      'Type'   .ljust( column_widths[:type]    ).bold,
-      'DNS'    .ljust( column_widths[:dns]     ).bold,
-      'Zone'   .ljust( 10                      ).bold,
-      'Roles'  .ljust( column_widths[:roles]   ).bold,
-      'Options'.ljust( column_widths[:options] ).bold
+      'Num'                                                         .bold,
+      'Name'                       .ljust( column_widths[:name]    ).bold,
+      'ID'                         .ljust( 10                      ).bold,
+      'Type'                       .ljust( column_widths[:type]    ).bold,
+      'DNS'                        .ljust( column_widths[:dns]     ).bold,
+      'Zone'                       .ljust( 10                      ).bold,
+      @ec2_config[:aws_roles_tag]  .ljust( column_widths[:roles]   ).bold,
+      @ec2_config[:aws_options_tag].ljust( column_widths[:options] ).bold
 
     desired_instances.each_with_index do |instance, i|
       puts sprintf "%02d:   %-10s   %s   %s   %s   %-10s   %s   %s",
         i, 
-        (instance.name || '')                             .ljust( column_widths[:name]    ).green,
-        instance.id                                       .ljust( 2                       ).red,
-        instance.flavor_id                                .ljust( column_widths[:type]    ).cyan,
-        instance.contact_point                            .ljust( column_widths[:dns]     ).blue.bold,
-        instance.availability_zone                        .ljust( 10                      ).magenta,
-        (instance.tags[@ec2_config[:aws_roles_tag]] || '').ljust( column_widths[:roles]   ).yellow,
-        (instance.tags["Options"] || '')                  .ljust( column_widths[:options] ).yellow
+        (instance.name || '')                               .ljust( column_widths[:name]    ).green,
+        instance.id                                         .ljust( 2                       ).red,
+        instance.flavor_id                                  .ljust( column_widths[:type]    ).cyan,
+        instance.contact_point                              .ljust( column_widths[:dns]     ).blue.bold,
+        instance.availability_zone                          .ljust( 10                      ).magenta,
+        (instance.tags[@ec2_config[:aws_roles_tag]] || '')  .ljust( column_widths[:roles]   ).yellow,
+        (instance.tags[@ec2_config[:aws_options_tag]] || '').ljust( column_widths[:options] ).yellow
     end
   end
 
@@ -102,7 +105,7 @@ class CapifyEc2
   
   def get_instances_by_region(roles, region)
     return unless region
-    desired_instances.select {|instance| instance.availability_zone.match(region) && instance.tags['Roles'].split(%r{,\s*}).include?(roles.to_s) rescue false}
+    desired_instances.select {|instance| instance.availability_zone.match(region) && instance.tags[@ec2_config[:aws_roles_tag]].split(%r{,\s*}).include?(roles.to_s) rescue false}
   end 
   
   def get_instance_by_name(name)

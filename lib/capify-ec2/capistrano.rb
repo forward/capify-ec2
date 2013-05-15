@@ -206,7 +206,7 @@ Capistrano::Configuration.instance(:must_exist).load do
         if named_instance.respond_to?(:roles)
           roles = named_instance.roles
         else
-          roles = [named_instance.tags["Roles"]].flatten
+          roles = [named_instance.tags[ @ec2_config[:aws_roles_tag] ]].flatten
         end    
         
         roles.each do |role|
@@ -277,7 +277,7 @@ Capistrano::Configuration.instance(:must_exist).load do
       cap_options
     end 
 
-    ec2_options = instance.tags["Options"] || ""
+    ec2_options = instance.tags[capify_ec2.ec2_config[:aws_options_tag]] || ""
     ec2_options.split(%r{,\s*}).compact.each { |ec2_option|  cap_options[ec2_option.to_sym] = true }
 
     variables.each do |key, value| 
