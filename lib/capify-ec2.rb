@@ -33,11 +33,20 @@ class CapifyEc2
     regions = determine_regions()
     
     @instances = []
+
     regions.each do |region|
-      Fog::Compute.new(:provider => 'AWS',
-                       :aws_access_key_id => aws_access_key_id,
-                       :aws_secret_access_key => aws_secret_access_key,
-                       :region => region).servers.each do |server|
+      begin
+        servers = Fog::Compute.new( :provider => 'AWS',
+                                    :aws_access_key_id => aws_access_key_id,
+                                    :aws_secret_access_key => aws_secret_access_key,
+                                    :region => region
+                                  ).servers
+      rescue => e
+        puts "[Capify-EC2] Unable to connect to AWS: #{e}.".red.bold
+        exit 1
+      end
+
+      servers.each do |server|
         @instances << server if server.ready?
       end
     end
@@ -48,11 +57,11 @@ class CapifyEc2
   end
 
   def aws_access_key_id
-    @ec2_config[:aws_access_key_id] || Fog.credentials[:aws_access_key_id] || ENV['AWS_ACCESS_KEY_ID']
+    @ec2_config[:aws_access_key_id] || Fog.credentials[:aws_access_key_id] || ENV['AWS_ACCESS_KEY_ID'] || raise("Missing AWS Access Key ID")
   end
 
   def aws_secret_access_key
-    @ec2_config[:aws_secret_access_key] || Fog.credentials[:aws_secret_access_key] || ENV['AWS_SECRET_ACCESS_KEY']
+    @ec2_config[:aws_secret_access_key] || Fog.credentials[:aws_secret_access_key] || ENV['AWS_SECRET_ACCESS_KEY'] || raise("Missing AWS Secret Access Key")
   end
 
   def display_instances
