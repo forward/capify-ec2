@@ -1,3 +1,10 @@
+## 1.4.7 (May 16, 2013)
+
+Features:
+
+  - Added the ability to load AWS credentials from the Fog configuration file, rather than from the 'ec2.yml' file. Refer to the Fog documentation for details on specifying AWS credentials.
+  - Improved error handling when no AWS credentials are found by any supported method.
+
 ## 1.4.6 (May 15, 2013)
 
 Features:

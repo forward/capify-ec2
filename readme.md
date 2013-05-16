@@ -31,7 +31,7 @@ require "capify-ec2/capistrano"
 
 #### Configuration
 
-Note: ':aws_access_key_id', ':aws_secret_access_key', and ':region' are required. Other settings are optional.
+Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you provide them via the two alternative methods detailed below. ':region' is also required. Other settings are optional.
 
 * :project_tag
 
@@ -58,9 +58,23 @@ Note: ':aws_access_key_id', ':aws_secret_access_key', and ':region' are required
 
   Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance options. Defaults to 'Options' if ommited.
 
-##### Via Environment Variables
+##### AWS Credentials
+
+###### Via YML Configuration
+
+By default, Capify-EC2 will attempt to use the credentials found in your 'ec2.yml' configuration as detailed above.
+
+###### Via Fog Configuration
+
+If you wish, you can have Capify-EC2 use the AWS credentials found in your Fog configuration, instead of instead of specifying ':aws_access_key_id' and ':aws_secret_access_key' in the YML configuration file. Refer to the Fog documentation for details on specifying AWS credentials.
+
+###### Via Environment Variables
 
 If you wish, you can define AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as environment variables, instead of specifying ':aws_access_key_id' and ':aws_secret_access_key' in the YML configuration file.
+
+###### Ordering
+
+Capify-EC2 will attempt to load your AWS credentials first from the 'ec2.yml' configuration file, then from your Fog configuration file, and finally from environment variables. It will display an error if no credentials are found by any of these methods.
 
 
 
