@@ -45,6 +45,10 @@ Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you
     - "YOUR OTHER APP NAME"
    ```
 
+* :aws_project_tag
+
+  Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance project. Defaults to 'Project' if ommited.
+
 * :load_balanced
 
   When ':load_balanced' is set to 'true', Capify-EC2 uses pre and post-deploy hooks to deregister the instance from an associated Elastic Load Balancer, perform the actual deploy, then finally reregister with the ELB and validated the instance health.
