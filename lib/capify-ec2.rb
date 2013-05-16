@@ -48,11 +48,11 @@ class CapifyEc2
   end
 
   def aws_access_key_id
-    @ec2_config[:aws_access_key_id] || ENV['AWS_ACCESS_KEY_ID']
+    @ec2_config[:aws_access_key_id] || Fog.credentials[:aws_access_key_id] || ENV['AWS_ACCESS_KEY_ID']
   end
 
   def aws_secret_access_key
-    @ec2_config[:aws_secret_access_key] || ENV['AWS_SECRET_ACCESS_KEY']
+    @ec2_config[:aws_secret_access_key] || Fog.credentials[:aws_secret_access_key] || ENV['AWS_SECRET_ACCESS_KEY']
   end
 
   def display_instances
