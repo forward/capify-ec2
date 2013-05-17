@@ -1,3 +1,9 @@
+## 1.4.9 (May 17, 2013)
+
+Bugfixes:
+
+  - Determine and set the real SCM revision explicitly, before beginning the rolling deployment. This is to prevent changes made to SCM during deployment from being inadvertently released.
+
 ## 1.4.8 (May 17, 2013)
 
 Features:
