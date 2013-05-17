@@ -1,3 +1,10 @@
+## 1.4.8 (May 17, 2013)
+
+Features:
+
+  - The EC2 instance tag used to determine instance Project can now be customised. Defaults to 'Project' if this setting is ommited.
+  - If any project tags are being used, they are now displayed when running the 'ec2:status' command.
+
 ## 1.4.7 (May 16, 2013)
 
 Features:
