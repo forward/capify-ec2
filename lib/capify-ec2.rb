@@ -23,6 +23,8 @@ class CapifyEc2
 
     # Maintain backward compatibility with previous config format
     @ec2_config[:project_tags] ||= []
+    # User can change the Project tag string
+    @ec2_config[:aws_project_tag] ||= "Project"
     # User can change the Roles tag string
     @ec2_config[:aws_roles_tag] ||= "Roles"
     # User can change the Options tag string.
@@ -109,7 +111,7 @@ class CapifyEc2
   end
     
   def project_instances
-    @instances.select {|instance| @ec2_config[:project_tags].include?(instance.tags["Project"])}
+    @instances.select {|instance| @ec2_config[:project_tags].include?(instance.tags[@ec2_config[:aws_project_tag]])}
   end
   
   def desired_instances(region = nil)
