@@ -31,7 +31,7 @@ require "capify-ec2/capistrano"
 
 #### Configuration
 
-Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you provide them via the two alternative methods detailed below. ':region' is also required. Other settings are optional.
+Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you provide them via the two alternative methods detailed below under 'AWS Credentials'. ':region' is also required. Other settings are optional.
 
 * :project_tag
 
@@ -49,11 +49,6 @@ Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you
 
   Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance project. Defaults to 'Project' if ommited.
 
-* :load_balanced
-
-  When ':load_balanced' is set to 'true', Capify-EC2 uses pre and post-deploy hooks to deregister the instance from an associated Elastic Load Balancer, perform the actual deploy, then finally reregister with the ELB and validated the instance health.
-  Note: This options only applies to deployments made to an individual instance, using the command 'cap INSTANCE_NAME_HERE deploy' - it doesn't apply to roles.
-
 * :aws_roles_tag
 
   Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance roles. Defaults to 'Roles' if ommited.
@@ -61,6 +56,11 @@ Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you
 * :aws_options_tag
 
   Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance options. Defaults to 'Options' if ommited.
+
+* :load_balanced
+
+  When ':load_balanced' is set to 'true', Capify-EC2 uses pre and post-deploy hooks to deregister the instance from an associated Elastic Load Balancer, perform the actual deploy, then finally reregister with the ELB and validated the instance health.
+  Note: This options only applies to deployments made to an individual instance, using the command 'cap INSTANCE_NAME_HERE deploy' - it doesn't apply to roles.
 
 ##### AWS Credentials
 
