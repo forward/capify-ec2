@@ -89,6 +89,11 @@ Capistrano::Configuration.instance(:must_exist).load do
     load_balancer_to_reregister = nil
 
     begin
+
+      # Fetch and set the real revision (eg/ Git ref) now, so any changes made to SCM during deployment will not be inadvertently included.
+      puts "[Capify-EC2] Determining release revision..."
+      set :revision, (fetch :real_revision)
+
       all_servers.each do |server_dns,server_roles|
 
         roles.clear
