@@ -83,6 +83,7 @@ class CapifyEc2
     column_widths[:options] = desired_instances.map{|i| i.tags[@ec2_config[:aws_options_tag]].to_s.ljust( column_widths[:options_min] ) || ' ' * column_widths[:options_min] }.max_by(&:length).length
 
     # Title row.
+    puts "#{@ec2_config[:aws_project_tag].bold}: #{@ec2_config[:project_tags].join(', ')}." if @ec2_config[:project_tags].any?
     puts sprintf "%-3s   %s   %s   %s   %s   %s   %s   %s", 
       'Num'                                                         .bold,
       'Name'                       .ljust( column_widths[:name]    ).bold,
