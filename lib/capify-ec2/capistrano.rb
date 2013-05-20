@@ -4,7 +4,7 @@ require 'pp'
 
 Capistrano::Configuration.instance(:must_exist).load do  
   def capify_ec2
-    @capify_ec2 ||= CapifyEc2.new(fetch(:ec2_config, 'config/ec2.yml'))
+    @capify_ec2 ||= CapifyEc2.new(fetch(:ec2_config, 'config/ec2.yml'), fetch(:stage, ''))
   end
 
   namespace :ec2 do
