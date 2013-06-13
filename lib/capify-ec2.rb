@@ -263,7 +263,7 @@ class CapifyEc2
 
     if uri.scheme == 'https'
      http.use_ssl = true
-     http.verify_mode = options[:no_verify_cert] ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
+     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     end
 
     result = nil

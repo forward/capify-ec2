@@ -126,9 +126,8 @@ Capistrano::Configuration.instance(:must_exist).load do
 
             healthchecks_for_role.each_with_index do |healthcheck_for_role, i|
               options = {}
-              options[:https]          = healthcheck_for_role[:https]   ||= false
-              options[:timeout]        = healthcheck_for_role[:timeout] ||= 60
-              options[:no_verify_cert] = healthcheck_for_role[:no_verify_cert] ||= true
+              options[:https]   = healthcheck_for_role[:https]   ||= false
+              options[:timeout] = healthcheck_for_role[:timeout] ||= 60
 
               healthcheck = capify_ec2.instance_health_by_url( server_dns,
                                                                healthcheck_for_role[:port], 
