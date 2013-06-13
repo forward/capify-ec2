@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'fog'
 require 'colored'
+require 'net/http'
 require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
 
 class CapifyEc2
