@@ -1,3 +1,9 @@
+## 1.4.10 (Jun 13, 2013)
+
+Bugfixes:
+
+  - Require 'net/http' for the rolling deployment healthcheck.
+
 ## 1.4.9 (May 17, 2013)
 
 Bugfixes:
