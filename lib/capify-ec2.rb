@@ -8,12 +8,12 @@ require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
 class CapifyEc2
 
   attr_accessor :load_balancer, :instances, :ec2_config
-  
+
   unless const_defined? :SLEEP_COUNT
     SLEEP_COUNT = 5
   end
-  
-  def initialize(ec2_config = "config/ec2.yml")
+
+  def initialize(ec2_config = "config/ec2.yml", stage = '')
     case ec2_config
     when Hash
       @ec2_config = ec2_config
@@ -22,6 +22,7 @@ class CapifyEc2
     else
       raise ArgumentError, "Invalid ec2_config: #{ec2_config.inspect}"
     end
+    @ec2_config[:stage] = stage
 
     # Maintain backward compatibility with previous config format
     @ec2_config[:project_tags] ||= []
@@ -31,11 +32,13 @@ class CapifyEc2
     @ec2_config[:aws_roles_tag] ||= "Roles"
     # User can change the Options tag string.
     @ec2_config[:aws_options_tag] ||= "Options"
+    # User can change the Stages tag string
+    @ec2_config[:aws_stages_tag] ||= "Stages"
 
     @ec2_config[:project_tags] << @ec2_config[:project_tag] if @ec2_config[:project_tag]
-    
+
     regions = determine_regions()
-    
+
     @instances = []
 
     regions.each do |region|
@@ -54,8 +57,8 @@ class CapifyEc2
         @instances << server if server.ready?
       end
     end
-  end 
-  
+  end
+
   def determine_regions()
     @ec2_config[:aws_params][:regions] || [@ec2_config[:aws_params][:region]]
   end
@@ -73,20 +76,22 @@ class CapifyEc2
       puts "[Capify-EC2] No instances were found using your 'ec2.yml' configuration.".red.bold
       return
     end
-    
+
     # Set minimum widths for the variable length instance attributes.
-    column_widths = { :name_min => 4, :type_min => 4, :dns_min => 5, :roles_min => @ec2_config[:aws_roles_tag].length, :options_min => @ec2_config[:aws_options_tag].length }
+    column_widths = { :name_min => 4, :type_min => 4, :dns_min => 5, :roles_min => @ec2_config[:aws_roles_tag].length, :stages_min => @ec2_config[:aws_stages_tag].length, :options_min => @ec2_config[:aws_options_tag].length }
 
     # Find the longest attribute across all instances, to format the columns properly.
     column_widths[:name]    = desired_instances.map{|i| i.name.to_s.ljust( column_widths[:name_min] )                                   || ' ' * column_widths[:name_min]    }.max_by(&:length).length
     column_widths[:type]    = desired_instances.map{|i| i.flavor_id                                                                     || ' ' * column_widths[:type_min]    }.max_by(&:length).length
     column_widths[:dns]     = desired_instances.map{|i| i.contact_point.to_s.ljust( column_widths[:dns_min] )                           || ' ' * column_widths[:dns_min]     }.max_by(&:length).length
     column_widths[:roles]   = desired_instances.map{|i| i.tags[@ec2_config[:aws_roles_tag]].to_s.ljust( column_widths[:roles_min] )     || ' ' * column_widths[:roles_min]   }.max_by(&:length).length
+    column_widths[:stages]  = desired_instances.map{|i| i.tags[@ec2_config[:aws_stages_tag]].to_s.ljust( column_widths[:stages_min] )   || ' ' * column_widths[:stages_min]  }.max_by(&:length).length
     column_widths[:options] = desired_instances.map{|i| i.tags[@ec2_config[:aws_options_tag]].to_s.ljust( column_widths[:options_min] ) || ' ' * column_widths[:options_min] }.max_by(&:length).length
 
     # Title row.
     puts "#{@ec2_config[:aws_project_tag].bold}: #{@ec2_config[:project_tags].join(', ')}." if @ec2_config[:project_tags].any?
-    puts sprintf "%-3s   %s   %s   %s   %s   %s   %s   %s", 
+    puts "#{@ec2_config[:aws_stages_tag].bold}: #{@ec2_config[:stage]}." unless @ec2_config[:stage].empty?
+    puts sprintf "%-3s   %s   %s   %s   %s   %s   %s   %s",
       'Num'                                                         .bold,
       'Name'                       .ljust( column_widths[:name]    ).bold,
       'ID'                         .ljust( 10                      ).bold,
@@ -94,17 +99,19 @@ class CapifyEc2
       'DNS'                        .ljust( column_widths[:dns]     ).bold,
       'Zone'                       .ljust( 10                      ).bold,
       @ec2_config[:aws_roles_tag]  .ljust( column_widths[:roles]   ).bold,
+      @ec2_config[:aws_stages_tag] .ljust( column_widths[:stages]  ).bold,
       @ec2_config[:aws_options_tag].ljust( column_widths[:options] ).bold
 
     desired_instances.each_with_index do |instance, i|
       puts sprintf "%02d:   %-10s   %s   %s   %s   %-10s   %s   %s",
-        i, 
+        i,
         (instance.name || '')                               .ljust( column_widths[:name]    ).green,
         instance.id                                         .ljust( 2                       ).red,
         instance.flavor_id                                  .ljust( column_widths[:type]    ).cyan,
         instance.contact_point                              .ljust( column_widths[:dns]     ).blue.bold,
         instance.availability_zone                          .ljust( 10                      ).magenta,
         (instance.tags[@ec2_config[:aws_roles_tag]] || '')  .ljust( column_widths[:roles]   ).yellow,
+        (instance.tags[@ec2_config[:aws_stages_tag]] || '') .ljust( column_widths[:stages]  ).yellow,
         (instance.tags[@ec2_config[:aws_options_tag]] || '').ljust( column_widths[:options] ).yellow
     end
   end
@@ -112,28 +119,33 @@ class CapifyEc2
   def server_names
     desired_instances.map {|instance| instance.name}
   end
-    
+
   def project_instances
     @instances.select {|instance| @ec2_config[:project_tags].include?(instance.tags[@ec2_config[:aws_project_tag]])}
   end
-  
+
   def desired_instances(region = nil)
-    @ec2_config[:project_tags].empty? ? @instances : project_instances
+    instances = @ec2_config[:project_tags].empty? ? @instances : project_instances
+    @ec2_config[:stage].empty? ? instances : get_instances_by_stage(instances)
   end
- 
+
   def get_instances_by_role(role)
     desired_instances.select {|instance| instance.tags[@ec2_config[:aws_roles_tag]].split(%r{,\s*}).include?(role.to_s) rescue false}
   end
-  
+
+  def get_instances_by_stage(instances=@instances)
+    instances.select {|instance| instance.tags[@ec2_config[:aws_stages_tag]].split(%r{,\s*}).include?(@ec2_config[:stage].to_s) rescue false}
+  end
+
   def get_instances_by_region(roles, region)
     return unless region
     desired_instances.select {|instance| instance.availability_zone.match(region) && instance.tags[@ec2_config[:aws_roles_tag]].split(%r{,\s*}).include?(roles.to_s) rescue false}
-  end 
-  
+  end
+
   def get_instance_by_name(name)
     desired_instances.select {|instance| instance.name == name}.first
   end
-    
+
   def get_instance_by_dns(dns)
     desired_instances.select {|instance| instance.dns_name == dns}.first
   end
@@ -141,10 +153,10 @@ class CapifyEc2
   def instance_health(load_balancer, instance)
     elb.describe_instance_health(load_balancer.id, instance.id).body['DescribeInstanceHealthResult']['InstanceStates'][0]['State']
   end
-    
+
   def elb
     Fog::AWS::ELB.new(:aws_access_key_id => aws_access_key_id, :aws_secret_access_key => aws_secret_access_key, :region => @ec2_config[:aws_params][:region])
-  end 
+  end
 
   def get_load_balancer_by_instance(instance_id)
     hash = elb.load_balancers.inject({}) do |collect, load_balancer|
@@ -162,7 +174,7 @@ class CapifyEc2
     lbs[load_balancer_name]
 
   end
-     
+
   def deregister_instance_from_elb(instance_name)
     return unless @ec2_config[:load_balanced]
     instance = get_instance_by_name(instance_name)
@@ -172,7 +184,7 @@ class CapifyEc2
 
     elb.deregister_instances_from_load_balancer(instance.id, @@load_balancer.id)
   end
-  
+
   def register_instance_in_elb(instance_name, load_balancer_name = '')
     return if !@ec2_config[:load_balanced]
     instance = get_instance_by_name(instance_name)
@@ -185,7 +197,7 @@ class CapifyEc2
     fail_after = @ec2_config[:fail_after] || 30
     state = instance_health(load_balancer, instance)
     time_elapsed = 0
-    
+
     while time_elapsed < fail_after
       break if state == "InService"
       sleep SLEEP_COUNT
@@ -256,8 +268,8 @@ class CapifyEc2
 
     protocol = options[:https] ? 'https://' : 'http://'
     uri = URI("#{protocol}#{dns}:#{port}#{path}")
-    
-    puts "[Capify-EC2] Checking '#{uri}' for the content '#{expected_response.inspect}'..."    
+
+    puts "[Capify-EC2] Checking '#{uri}' for the content '#{expected_response.inspect}'..."
 
     http = Net::HTTP.new(uri.host, uri.port)
 
