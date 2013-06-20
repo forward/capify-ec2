@@ -440,7 +440,7 @@ ec2_roles :name => "web",
           }
 ```
 
-Sets a 10 second timeout, and performs the health check over HTTPS.
+Sets a 10 second timeout, and performs the health check over HTTPS. Note: When performing the health check over HTTPS, SSL peer verification is turned off, as the EC2 instance public DNS will not match the SSL certificate, causing the health check to fail.
 
 You can run multiple different healthchecks for a role by specifying the healthcheck as an array instead:
 

@@ -1,6 +1,8 @@
 require 'rubygems'
 require 'fog'
 require 'colored'
+require 'net/http'
+require 'net/https'
 require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
 
 class CapifyEc2
@@ -270,6 +272,12 @@ class CapifyEc2
     puts "[Capify-EC2] Checking '#{uri}' for the content '#{expected_response.inspect}'..."
 
     http = Net::HTTP.new(uri.host, uri.port)
+
+    if uri.scheme == 'https'
+     http.use_ssl = true
+     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    end
+
     result = nil
 
     begin

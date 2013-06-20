@@ -1,3 +1,15 @@
+## 1.4.11 (Jun 13, 2013)
+
+Features:
+
+  - When performing a rolling deployment healthcheck over HTTPS, SSL peer verification is disabled, as the EC2 instance public DNS will not match the SSL certificate hostname.
+
+## 1.4.10 (Jun 13, 2013)
+
+Bugfixes:
+
+  - Require 'net/http' for the rolling deployment healthcheck.
+
 ## 1.4.9 (May 17, 2013)
 
 Bugfixes:
