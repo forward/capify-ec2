@@ -110,23 +110,23 @@ class CapifyEc2
     status_output << 'Type'                       .ljust( column_widths[:type]    ).bold
     status_output << 'DNS'                        .ljust( column_widths[:dns]     ).bold
     status_output << 'Zone'                       .ljust( 10                      ).bold
-    status_output << @ec2_config[:aws_roles_tag]  .ljust( column_widths[:roles]   ).bold if roles_present
     status_output << @ec2_config[:aws_stages_tag] .ljust( column_widths[:stages]  ).bold if stages_present
+    status_output << @ec2_config[:aws_roles_tag]  .ljust( column_widths[:roles]   ).bold if roles_present
     status_output << @ec2_config[:aws_options_tag].ljust( column_widths[:options] ).bold if options_present
-    puts status_output.join("  ")
+    puts status_output.join("   ")
     
     desired_instances.each_with_index do |instance, i|
       status_output = []
       status_output << "%02d:" % i
-      status_output << (instance.name || '')                       .ljust( column_widths[:name]    ).green
-      status_output << instance.id                                 .ljust( 2                       ).red
-      status_output << instance.flavor_id                          .ljust( column_widths[:type]    ).cyan
-      status_output << instance.contact_point                      .ljust( column_widths[:dns]     ).blue.bold
-      status_output << instance.availability_zone                  .ljust( 10                      ).magenta
-      status_output << instance.tags[@ec2_config[:aws_roles_tag]]  .ljust( column_widths[:roles]   ).yellow if roles_present
-      status_output << instance.tags[@ec2_config[:aws_stages_tag]] .ljust( column_widths[:stages]  ).yellow if stages_present
-      status_output << instance.tags[@ec2_config[:aws_options_tag]].ljust( column_widths[:options] ).yellow if options_present
-      puts status_output.join("  ")
+      status_output << (instance.name || '')                               .ljust( column_widths[:name]    ).green
+      status_output << instance.id                                         .ljust( 2                       ).red
+      status_output << instance.flavor_id                                  .ljust( column_widths[:type]    ).cyan
+      status_output << instance.contact_point                              .ljust( column_widths[:dns]     ).blue.bold
+      status_output << instance.availability_zone                          .ljust( 10                      ).magenta
+      status_output << (instance.tags[@ec2_config[:aws_stages_tag]]  || '').ljust( column_widths[:stages]  ).yellow if stages_present
+      status_output << (instance.tags[@ec2_config[:aws_roles_tag]]   || '').ljust( column_widths[:roles]   ).yellow if roles_present
+      status_output << (instance.tags[@ec2_config[:aws_options_tag]] || '').ljust( column_widths[:options] ).yellow if options_present
+      puts status_output.join("   ")
     end
   end
 
