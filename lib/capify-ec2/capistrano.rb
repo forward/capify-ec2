@@ -213,7 +213,7 @@ Capistrano::Configuration.instance(:must_exist).load do
         if named_instance.respond_to?(:roles)
           roles = named_instance.roles
         else
-          roles = [named_instance.tags[ @ec2_config[:aws_roles_tag] ]].flatten
+          roles = [named_instance.tags[ capify_ec2.ec2_config[:aws_roles_tag] ]].flatten
         end    
         
         roles.each do |role|
