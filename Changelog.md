@@ -1,3 +1,9 @@
+## 1.XXX
+
+Features:
+
+  - Allow the use of IAM roles to authenticate with AWS, rather than an access key id and secret access key.
+
 ## 1.4.11 (Jun 13, 2013)
 
 Features:
