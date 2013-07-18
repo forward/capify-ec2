@@ -31,7 +31,7 @@ require "capify-ec2/capistrano"
 
 #### Configuration
 
-Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you provide them via the two alternative methods detailed below under 'AWS Credentials' or have the use_iam_profile option set to use IAM roles. ':region' is also required. Other settings are optional.
+Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you provide them via the two alternative methods detailed below under 'AWS Credentials' or have the ':use_iam_profile' option set to use IAM roles. ':region' is also required. Other settings are optional.
 
 * :project_tag
 
@@ -64,7 +64,7 @@ Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you
 
 * :use_iam_profile
 
-  Use this option to use IAM roles on your box for authentication rather than an access id and key
+  Use this option to use IAM roles for authentication, rather than an access key id and secret access key.
 
 
 ##### AWS Credentials
