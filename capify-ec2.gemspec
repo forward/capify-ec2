@@ -11,6 +11,7 @@ Gem::Specification.new do |s|
   s.homepage    = "http://github.com/forward/capify-ec2"
   s.summary     = %q{Capify-EC2 is used to generate Capistrano namespaces and tasks from Amazon EC2 instance tags, dynamically building the list of servers to be deployed to.}
   s.description = %q{Capify-EC2 is used to generate Capistrano namespaces and tasks from Amazon EC2 instance tags, dynamically building the list of servers to be deployed to.}
+  s.license     = 'MIT'
 
   s.rubyforge_project = "capify-ec2"
 
