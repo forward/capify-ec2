@@ -37,25 +37,29 @@ Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you
 
   If this is defined, Capify-EC2 will only create namespaces and tasks for the EC2 instances that have a matching 'Project' tag. By default, all instances available to the specified AWS access key will be used.
 
-  It is possible to include multiple projects simultaneously by using the :project_tags parameter, like so: 
+  It is possible to include multiple projects simultaneously by using the :project_tags parameter, like so:
 
   ```ruby
-  :project_tags: 
+  :project_tags:
     - "YOUR APP NAME"
     - "YOUR OTHER APP NAME"
    ```
 
 * :aws_project_tag
 
-  Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance project. Defaults to 'Project' if ommited.
+  Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance project. Defaults to 'Project' if omitted.
 
 * :aws_roles_tag
 
-  Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance roles. Defaults to 'Roles' if ommited.
+  Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance roles. Defaults to 'Roles' if omitted.
 
 * :aws_options_tag
 
-  Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance options. Defaults to 'Options' if ommited.
+  Use this option to change which EC2 instance tag Capify-EC2 uses to determine instance options. Defaults to 'Options' if omitted.
+
+* :aws_stages_tag
+
+  Use this option to change which EC2 instance tag Capify-EC2 uses to determine which instances belong to a stage. Should be used in conjunction with the [Capistrano Multistage Extension](https://github.com/capistrano/capistrano/wiki/2.x-Multistage-Extension). Defaults to 'Stages' if omitted.
 
 * :load_balanced
 
@@ -391,10 +395,10 @@ When defining a role with the 'ec2_role' command, if you configure a healthcheck
 
 ```ruby
 ec2_roles :name => "web",
-          :variables => { 
+          :variables => {
             :healthcheck => {
               :path   => '/status',
-              :port   => 80, 
+              :port   => 80,
               :result => 'OK'
             }
           }
@@ -438,12 +442,12 @@ The default timeout of 60 seconds can be overridden by setting ':timeout' to a c
 
 ```ruby
 ec2_roles :name => "web",
-          :variables => { 
+          :variables => {
             :healthcheck => {
               :path   => '/status',
-              :port   => 80, 
+              :port   => 80,
               :result => 'OK'
-              :https   => true, 
+              :https   => true,
               :timeout => 10
             }
           }
@@ -455,14 +459,14 @@ You can run multiple different healthchecks for a role by specifying the healthc
 
 ```ruby
 ec2_roles :name => "web",
-          :variables => { 
+          :variables => {
             :healthcheck => [{
               :path   => '/status',
-              :port   => 80, 
+              :port   => 80,
               :result => 'OK'
             }, {
               :path   => '/other_status',
-              :port   => 81, 
+              :port   => 81,
               :result => 'OK'
             }]
           }
@@ -488,7 +492,7 @@ ec2_roles :name => "web",
           :variables => {
             :healthcheck => {
                 :path   => '/status',
-                :port   => 80, 
+                :port   => 80,
                 :result => 'OK'
               }
             :load_balanced => true
@@ -599,7 +603,101 @@ cap web shell
 cap web db shell
 ```
 
+### Multistage
 
+You can use the [Capistrano Multistage Extension](https://github.com/capistrano/capistrano/wiki/2.x-Multistage-Extension) to manage deployments to multiple environments.
+
+##### Configuration
+
+You can set the tag name that Capify-EC2 will use to filter your server list by using the `:aws_stages_tag`. It defaults to 'Stages'.
+
+##### Usage
+
+In our examples, imagine that you have three servers on EC2 named and tagged as follows:
+
+<table>
+  <tr>
+    <td>'Name' Tag</td>
+    <td>'Roles' Tag</td>
+    <td>'Options' Tag</td>
+		<td>'Stages' Tag</td>
+  </tr>
+  <tr>
+    <td>server-1</td>
+    <td>web</td>
+    <td>cron,resque</td>
+		<td>production</td>
+  </tr>
+  <tr>
+    <td>server-2</td>
+    <td>db</td>
+    <td></td>
+		<td>production</td>
+  </tr>
+  <tr>
+    <td>server-3</td>
+    <td>web,db</td>
+    <td></td>
+		<td>staging</td>
+  </tr>
+</table>
+
+And you have the following 2 stages setup using Capistrano Multistage.
+
+production.rb
+
+```ruby
+ec2_roles name: :web
+ec2_roles name: :db
+```
+
+staging.rb
+
+```ruby
+ec2_roles name: :web
+ec2_roles name: :db
+```
+
+This will generate the following for production
+
+```ruby
+namespace :production do
+  task :server-1 do
+    role :web, SERVER-1_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true
+  end
+
+  task :server-2 do
+    role :db, SERVER-2_EC2_PUBLIC_DNS_HERE
+  end
+
+  task :web do
+    role :web, SERVER-1_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true
+  end
+
+  task :db do
+    role :db, SERVER-2_EC2_PUBLIC_DNS_HERE
+  end
+end
+
+namespace :staging do
+  task :server-3 do
+    role :web, SERVER-3_EC2_PUBLIC_DNS_HERE
+    role :db, SERVER-3_EC2_PUBLIC_DNS_HERE
+  end
+
+  task :web do
+    role :web, SERVER-3_EC2_PUBLIC_DNS_HERE
+  end
+
+  task :db do
+    role :db, SERVER-3_EC2_PUBLIC_DNS_HERE
+  end
+end
+```
+
+With the above config you can deploy to production using `cap production deploy`.
+
+You will also need to add the environment when running other ec2 commands like `ec2:status`, for example: `cap production ec2:status`
 
 ### Development
 
