@@ -10,7 +10,7 @@ Capify-EC2 is used to generate Capistrano namespaces and tasks from Amazon EC2 i
 
 or add the gem to your project's Gemfile.
 
-You will need to create a YML configuration file at 'config/ec2.yml' that looks like the following:
+You will need to create a YML configuration file at `config/ec2.yml` that looks like the following:
 
 ```ruby
 :aws_access_key_id: "YOUR ACCESS KEY"
@@ -21,7 +21,7 @@ You will need to create a YML configuration file at 'config/ec2.yml' that looks 
 :project_tag: "YOUR APP NAME"
 ```
 
-Finally, add the gem to your 'deploy.rb':
+Finally, add the gem to your `deploy.rb`:
 
 ```ruby
 require "capify-ec2/capistrano"
@@ -31,7 +31,7 @@ require "capify-ec2/capistrano"
 
 #### Configuration
 
-Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you provide them via the two alternative methods detailed below under 'AWS Credentials' or have the ':use_iam_profile' option set to use IAM roles. ':region' is also required. Other settings are optional.
+Note: `:aws_access_key_id` and `:aws_secret_access_key` are required, unless you provide them via the two alternative methods detailed below under 'AWS Credentials' or have the `:use_iam_profile` option set to use IAM roles. `:region` is also required. Other settings are optional.
 
 * :project_tag
 
@@ -64,7 +64,7 @@ Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you
 * :load_balanced
 
   When ':load_balanced' is set to 'true', Capify-EC2 uses pre and post-deploy hooks to deregister the instance from an associated Elastic Load Balancer, perform the actual deploy, then finally reregister with the ELB and validated the instance health.
-  Note: This options only applies to deployments made to an individual instance, using the command 'cap INSTANCE_NAME_HERE deploy' - it doesn't apply to roles.
+  Note: This options only applies to deployments made to an individual instance, using the command `cap INSTANCE_NAME_HERE deploy` - it doesn't apply to roles.
 
 * :use_iam_profile
 
@@ -75,23 +75,23 @@ Note: ':aws_access_key_id' and ':aws_secret_access_key' are required, unless you
 
 ###### Via YML Configuration
 
-By default, Capify-EC2 will attempt to use the credentials found in your 'ec2.yml' configuration as detailed above.
+By default, Capify-EC2 will attempt to use the credentials found in your `ec2.yml` configuration as detailed above.
 
 ###### Via Fog Configuration
 
-If you wish, you can have Capify-EC2 use the AWS credentials found in your Fog configuration, instead of instead of specifying ':aws_access_key_id' and ':aws_secret_access_key' in the YML configuration file. Refer to the Fog documentation for details on specifying AWS credentials.
+If you wish, you can have Capify-EC2 use the AWS credentials found in your Fog configuration, instead of instead of specifying `:aws_access_key_id` and `:aws_secret_access_key` in the YML configuration file. Refer to the Fog documentation for details on specifying AWS credentials.
 
 ###### Via Environment Variables
 
-If you wish, you can define AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as environment variables, instead of specifying ':aws_access_key_id' and ':aws_secret_access_key' in the YML configuration file.
+If you wish, you can define AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as environment variables, instead of specifying `:aws_access_key_id` and `:aws_secret_access_key` in the YML configuration file.
 
 ###### Via AWS IAM Roles
 
-If you have IAM roles set up on your box to allow querying EC2 information you tell Fog to use IAM roles and you will not need to provide any credentials at runtime.  For more information on IAM roles read Amazon's documentation at http://aws.amazon.com/iam/
+If you have IAM roles set up on your box to allow querying EC2 information you tell Fog to use IAM roles and you will not need to provide any credentials at runtime. For more information on IAM roles read Amazon's [IAM documentation](http://aws.amazon.com/iam/).
 
 ###### Ordering
 
-Capify-EC2 will attempt to load your AWS credentials first from the 'ec2.yml' configuration file, then from your Fog configuration file, and finally from environment variables. It will display an error if no credentials are found by any of these methods.
+Capify-EC2 will attempt to load your AWS credentials first from the `ec2.yml` configuration file, then from your Fog configuration file, and finally from environment variables. It will display an error if no credentials are found by any of these methods.
 
 
 
@@ -101,7 +101,7 @@ You will need to create instance tags using the AWS Management Console or API, t
 
 * Tag 'Project'
 
-  Used with the ':project_tag' option in 'config/ec2.yml' to limit Capify-EC2's functionality to a subset of your instances.
+  Used with the `:project_tag` option in `config/ec2.yml` to limit Capify-EC2's functionality to a subset of your instances.
 
 * Tag 'Roles'
 
@@ -144,7 +144,7 @@ In our examples, imagine that you have three servers on EC2 named and tagged as 
 
 #### Single Roles
 
-You need to add a call to 'ec2_roles' in your 'deploy.rb', like so:
+You need to add a call to `ec2_roles` in your `deploy.rb`, like so:
 
 ```ruby
 ec2_roles :web
@@ -167,7 +167,7 @@ task :web do
 end
 ```
 
-Note that there are no tasks created for 'server-2', as it does not have the role 'web'. If we were to change the 'ec2_roles' definition in your 'deploy.rb' to the following:
+Note that there are no tasks created for 'server-2', as it does not have the role 'web'. If we were to change the `ec2_roles` definition in your `deploy.rb` to the following:
 
 ```ruby
 ec2_roles :db
@@ -194,7 +194,7 @@ end
 
 #### Multiple Roles
 
-If you want to create tasks for servers using multiple roles, you can call 'ec2_roles' multiple times in your 'deploy.rb' as follows:
+If you want to create tasks for servers using multiple roles, you can call `ec2_roles` multiple times in your `deploy.rb` as follows:
 
 ```ruby
 ec2_roles :web
@@ -287,7 +287,7 @@ For example, if we had the following group of instances in EC2:
   </tr>
 </table>
 
-You could then create a task in your 'deploy.rb' that will only be executed on the worker machine, like so:
+You could then create a task in your `deploy.rb` that will only be executed on the worker machine, like so:
 
 ```ruby
 task :reload_workers, :only=>{:worker=>true} do
@@ -303,13 +303,13 @@ end
 
 ##### Via Role Definitions
 
-As well as defining Options at an instance level via EC2 tags, you can define an Option in your 'deploy.rb' at the same time as defining the role, as follows:
+As well as defining Options at an instance level via EC2 tags, you can define an Option in your `deploy.rb` at the same time as defining the role, as follows:
 
 ```ruby
 ec2_roles {:name=>"web", :options=>{:worker=>"server-C"}}
 ```
 
-In this case, you set the value of ':worker' equal to the instance name you want to be a worker. The task definition remains the same:
+In this case, you set the value of `:worker` equal to the instance name you want to be a worker. The task definition remains the same:
 
 ```ruby
 task :reload_workers => :web, :only=>{:worker=>true} do
@@ -321,7 +321,7 @@ end
 
 #### Deploying
 
-Once you have defined the various roles used by your application, you can deploy to it as you normally would a namespace, for example if you define the following in your 'deploy.rb':
+Once you have defined the various roles used by your application, you can deploy to it as you normally would a namespace, for example if you define the following in your `deploy.rb`:
 
 ```ruby
 ec2_roles :web
@@ -340,11 +340,18 @@ If you've defined multiple roles, you can deploy to them all by chaining the tas
 cap web app deploy
 ```
 
+You can also deploy to individual instances by specifying their 'Name' tag, for example, with the sample servers above:
+
+```ruby
+cap server-1 deploy
+```
+
+would deploy only to the instance named 'server-1'.
 
 
 ##### Default Deploys
 
-You can set a role as the default so that it will be included when you run 'cap deploy' without specifying any roles, for example in your 'deploy.rb':
+You can set a role as the default so that it will be included when you run `cap deploy` without specifying any roles, for example in your `deploy.rb`:
 
 ```ruby
 ec2_roles :name=>"web", :options => {:default=>true}
@@ -356,7 +363,7 @@ Then run:
 cap deploy
 ```
 
-You can set multiple roles as defaults, so they are all included when you run 'cap deploy', like so:
+You can set multiple roles as defaults, so they are all included when you run `cap deploy`, like so:
 
 ```ruby
 ec2_roles :name=>"web", :options => {:default=>true}
@@ -391,7 +398,7 @@ cap web db rolling_deploy
 
 ##### Usage with Healthchecks
 
-When defining a role with the 'ec2_role' command, if you configure a healthcheck for that role as follows, it will automatically be used during the rolling deployment:
+When defining a role with the `ec2_role` call, if you configure a healthcheck for that role as follows, it will automatically be used during the rolling deployment:
 
 ```ruby
 ec2_roles :name => "web",
@@ -438,7 +445,7 @@ ec2_roles :name => "web",
           }
 ```
 
-The default timeout of 60 seconds can be overridden by setting ':timeout' to a custom value in seconds. The protocol used defaults to 'http://', however you can switch to 'https://' by setting ':https' equal to 'true'. For example:
+The default timeout of 60 seconds can be overridden by setting `:timeout` to a custom value in seconds. The protocol used defaults to 'http://', however you can switch to 'https://' by setting `:https` equal to 'true'. For example:
 
 ```ruby
 ec2_roles :name => "web",
@@ -474,7 +481,7 @@ ec2_roles :name => "web",
 
 ##### Usage with Elastic Load Balancers
 
-You can have Capify-EC2 automatically deregister and reregister an instance from whichever ELB it is associated with, before and after the deployment, by setting ':load_balanced' to 'true' in the role definition, for example:
+You can have Capify-EC2 automatically deregister and reregister an instance from whichever ELB it is associated with, before and after the deployment, by setting `:load_balanced` to 'true' in the role definition, for example:
 
 ```ruby
 ec2_roles :name => "web",
@@ -501,9 +508,9 @@ ec2_roles :name => "web",
 
 In this example, the instance will be deregistered from the ELB it is associated with and then deployed to. A healthcheck will then be performed, and providing this passes, the instance will be reregistered with the ELB and verified.
 
-If an instance has been tagged with multiple roles, this behaviour will apply if ':load_balanced' is set to 'true' in at least one of those roles.
+If an instance has been tagged with multiple roles, this behaviour will apply if `:load_balanced` is set to 'true' in at least one of those roles.
 
-If an instance is not associated with any ELBs, then the behaviour will be skipped silently, even if ':load_balanced' is set to 'true'.
+If an instance is not associated with any ELBs, then the behaviour will be skipped silently, even if `:load_balanced` is set to 'true'.
 
 
 
@@ -529,19 +536,19 @@ cap SERVER_NAME_HERE ec2:deregister_instance
 cap SERVER_NAME_HERE ec2:register_instance -s loadbalancer=ELB_NAME_HERE
 ```
 
-You need to specify the ELB when reregistering an instance, but not when deregistering. This can also be done automatically using the ':load_balanced' setting (see the 'Configuration' section above).
+You need to specify the ELB when reregistering an instance, but not when deregistering. This can also be done automatically using the `:load_balanced` setting (see the 'Configuration' section above).
 
 
 
 #### Connecting to an Instance via SSH
 
-Using the 'cap ec2:ssh' command, you can quickly connect to a specific instance, by checking the listing from 'ec2:status' and using the instance number as a parameter, for example:
+Using the `cap ec2:ssh` command, you can quickly connect to a specific instance, by checking the listing from `ec2:status` and using the instance number as a parameter, for example:
 
 ```ruby
 cap ec2:ssh 1
 ```
 
-will attempt to connect to instance number 1 (as shown in 'ec2:status'), using the public DNS address provided by AWS.
+will attempt to connect to instance number 1 (as shown in `ec2:status`), using the public DNS address provided by AWS.
 
 
 
@@ -565,15 +572,21 @@ Will restrict the 'date' command so it is only run on instances that are tagged 
 cap web db ec2:date
 ```
 
+You can use the 'Name' tag of an EC2 instance to limit the scope of the command to an individual instance:
+
+```ruby
+cap server-1 ec2:date
+```
+
 ##### Cap Invoke
 
-You can use the standard Capistrano 'invoke' task to run an arbitrary command on your instances, for example:
+You can use the standard Capistrano `invoke` task to run an arbitrary command on your instances, for example:
 
 ```ruby
 cap COMMAND='uptime' invoke
 ```
 
-Will run the 'uptime' command on all instances that match your configuration (projects and roles). As with the 'ec2:date' command, you can further limit this by using a role, like so:
+Will run the 'uptime' command on all instances that match your configuration (projects and roles). As with the `ec2:date` command, you can further limit this by using a role, like so:
 
 ```ruby
 cap web COMMAND='uptime' invoke
@@ -585,9 +598,15 @@ You can also chain many roles together to increase the scope of the command:
 cap web db COMMAND='uptime' invoke
 ```
 
+As with ec2:date, you can use the 'Name' tag of an EC2 instance to limit the scope of the command to an individual instance:
+
+```ruby
+cap server-1 COMMAND='uptime' invoke
+```
+
 ##### Cap Shell
 
-You can use the standard Capistrano 'shell' task to open an interactive terminal session with your instances, for example:
+You can use the standard Capistrano `shell` task to open an interactive terminal session with your instances, for example:
 
 ```ruby
 cap shell
@@ -602,6 +621,7 @@ cap web shell
 ```ruby
 cap web db shell
 ```
+
 
 ### Multistage
 
