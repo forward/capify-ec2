@@ -1,8 +1,13 @@
-## 1.XXX
+## 1.5.0.pre (Jul 19, 2013)
 
 Features:
 
+  - Added Support for the [Capistrano Multistage Extension](https://github.com/capistrano/capistrano/wiki/2.x-Multistage-Extension).
   - Allow the use of IAM roles to authenticate with AWS, rather than an access key id and secret access key.
+
+Bugfixes:
+
+  - Fixed an issue executing cap tasks on individual instances.
 
 ## 1.4.11 (Jun 13, 2013)
 
