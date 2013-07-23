@@ -59,8 +59,8 @@ class CapifyEc2
     if @ec2_config[:use_iam_profile]
       { :use_iam_profile       => true }
     else
-      { :aws_access_key_id     => @ec2_config[:aws_access_key_id], 
-        :aws_secret_access_key => @ec2_config[:aws_secret_access_key] }
+      { :aws_access_key_id     => aws_access_key_id,
+        :aws_secret_access_key => aws_secret_access_key }
     end
   end
   
