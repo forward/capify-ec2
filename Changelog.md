@@ -1,3 +1,9 @@
+## 1.5.0.pre2 (Jul 23, 2013)
+
+Bugfixes:
+
+  - Fixed a regression where Capify-EC2 wasn't pulling in configuration from anything except for 'ec2.yml'.
+
 ## 1.5.0.pre (Jul 19, 2013)
 
 Features:
