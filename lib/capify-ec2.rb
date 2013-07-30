@@ -100,7 +100,7 @@ class CapifyEc2
     # Project and Stages info..
     info_label_width = [@ec2_config[:aws_project_tag], @ec2_config[:aws_stages_tag]].map(&:length).max
     puts "#{@ec2_config[:aws_project_tag].rjust( info_label_width ).bold}: #{@ec2_config[:project_tags].join(', ')}." if @ec2_config[:project_tags].any?
-    puts "#{@ec2_config[:aws_stages_tag].rjust( info_label_width ).bold}: #{@ec2_config[:stage]}." unless @ec2_config[:stage].empty?
+    puts "#{@ec2_config[:aws_stages_tag].rjust( info_label_width ).bold}: #{@ec2_config[:stage]}." unless @ec2_config[:stage].to_s.empty?
     
     # Title row.
     status_output = []
@@ -140,7 +140,7 @@ class CapifyEc2
 
   def desired_instances(region = nil)
     instances = @ec2_config[:project_tags].empty? ? @instances : project_instances
-    @ec2_config[:stage].empty? ? instances : get_instances_by_stage(instances)
+    @ec2_config[:stage].to_s.empty? ? instances : get_instances_by_stage(instances)
   end
 
   def get_instances_by_role(role)
