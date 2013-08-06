@@ -1,3 +1,13 @@
+## 1.5.0.pre3 (Aug 6, 2013)
+
+Features:
+
+  - Capify-EC2 will now use the 'ssh_options[:keys]' setting in your 'deploy.rb' when connecting to an instance using the 'ec2:ssh' command.
+
+Bugfixes:
+
+  - Fixed an exception when using the 'ec2:ssh' and 'ec2:status' commands with stages.
+
 ## 1.5.0.pre2 (Jul 23, 2013)
 
 Bugfixes:
