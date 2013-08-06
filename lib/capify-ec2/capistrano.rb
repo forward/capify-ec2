@@ -49,7 +49,7 @@ Capistrano::Configuration.instance(:must_exist).load do
         if instance and instance.contact_point then
           port = ssh_options[:port] || 22 
           key = ""
-          if !ssh_options[:keys].empty?
+          if !ssh_options[:keys].to_s.empty?
             key = "-i #{ssh_options[:keys]}"
           end
           command = "ssh -p #{port} #{key} #{user}@#{instance.contact_point}"
