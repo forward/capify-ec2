@@ -1,3 +1,7 @@
+## 1.5.0 (Aug 20, 2013)
+
+Contains the changes from v1.5.0.pre to v1.5.0.pre3.
+
 ## 1.5.0.pre3 (Aug 6, 2013)
 
 Features:
