@@ -1,3 +1,9 @@
+## 1.5.1 (Sep 2, 2013)
+
+Bugfixes:
+
+  - Fixed an exception when using the 'ec2:status' command with EC2 instances which have empty 'name' tags.
+
 ## 1.5.0 (Aug 20, 2013)
 
 Contains the changes from v1.5.0.pre to v1.5.0.pre3.
