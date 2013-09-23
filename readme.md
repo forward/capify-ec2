@@ -147,7 +147,7 @@ In our examples, imagine that you have three servers on EC2 named and tagged as 
 You need to add a call to `ec2_roles` in your `deploy.rb`, like so:
 
 ```ruby
-ec2_roles :web
+ec2_roles {:name => :web}
 ```
 
 This will generate the following tasks:
@@ -170,7 +170,7 @@ end
 Note that there are no tasks created for 'server-2', as it does not have the role 'web'. If we were to change the `ec2_roles` definition in your `deploy.rb` to the following:
 
 ```ruby
-ec2_roles :db
+ec2_roles {:name => :db}
 ```
 
 Then we will instead see the following tasks generated:
@@ -253,6 +253,15 @@ task :web do
   role :web, SERVER-1_EC2_PUBLIC_DNS_HERE, :cron=>true, :resque=>true, :rails_env=>'staging'
   role :web, SERVER-3_EC2_PUBLIC_DNS_HERE, :rails_env=>'staging'
 end
+```
+
+
+
+#### Shorthand Role Definition
+If you are defining a role with no options or variables, you can define it using the following shorthand:
+
+```ruby
+ec2_roles :web
 ```
 
 
