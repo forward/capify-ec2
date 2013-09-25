@@ -557,7 +557,7 @@ Using the `cap ec2:ssh` command, you can quickly connect to a specific instance,
 cap ec2:ssh 1
 ```
 
-will attempt to connect to instance number 1 (as shown in `ec2:status`), using the public DNS address provided by AWS.
+will attempt to connect to instance number 1 (as shown in `ec2:status`), using the public DNS address provided by AWS and the first SSH key listed in ` ssh_options[:keys] `.
 
 
 
@@ -649,25 +649,25 @@ In our examples, imagine that you have three servers on EC2 named and tagged as 
     <td>'Name' Tag</td>
     <td>'Roles' Tag</td>
     <td>'Options' Tag</td>
-		<td>'Stages' Tag</td>
+    <td>'Stages' Tag</td>
   </tr>
   <tr>
     <td>server-1</td>
     <td>web</td>
     <td>cron,resque</td>
-		<td>production</td>
+    <td>production</td>
   </tr>
   <tr>
     <td>server-2</td>
     <td>db</td>
     <td></td>
-		<td>production</td>
+    <td>production</td>
   </tr>
   <tr>
     <td>server-3</td>
     <td>web,db</td>
     <td></td>
-		<td>staging</td>
+    <td>staging</td>
   </tr>
 </table>
 
