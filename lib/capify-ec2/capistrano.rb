@@ -101,7 +101,10 @@ Capistrano::Configuration.instance(:must_exist).load do
       puts "[Capify-EC2] Determining release revision..."
       set :revision, (fetch :real_revision)
 
-      all_servers.each do |server_dns,server_roles|
+      all_servers.each_with_index do |server,index|
+
+        server_dns = server[0]
+        server_roles = server[1]
 
         roles.clear
 
@@ -114,7 +117,7 @@ Capistrano::Configuration.instance(:must_exist).load do
         end
         
         puts "[Capify-EC2]"
-        puts "[Capify-EC2] Beginning deployment to #{instance_dns_with_name_tag(server_dns)} with #{server_roles.count > 1 ? 'roles' : 'role'} '#{server_roles.join(', ')}'...".bold
+        puts "[Capify-EC2] (#{index+1} of #{all_servers.length}) Beginning deployment to #{instance_dns_with_name_tag(server_dns)} with #{server_roles.count > 1 ? 'roles' : 'role'} '#{server_roles.join(', ')}'...".bold
 
         unless dry_run
           load_balancer_to_reregister = capify_ec2.deregister_instance_from_elb_by_dns(server_dns) if is_load_balanced
