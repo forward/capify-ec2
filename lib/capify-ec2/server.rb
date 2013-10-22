@@ -10,7 +10,7 @@ module Fog
         end
         
         def name
-          tags["Name"] || ""
+          tags["Name"] || id
         end
       end
     end
