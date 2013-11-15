@@ -1,3 +1,9 @@
+## 1.5.3 (Nov 15, 2013)
+
+Bugfixes:
+
+  - Fixed an issue running certain cap tasks when an instance has no `Name` tag, by defaulting to using its instance ID.
+
 ## 1.5.2 (Oct 2, 2013)
 
 Features:
