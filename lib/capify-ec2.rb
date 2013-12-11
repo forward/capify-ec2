@@ -40,6 +40,7 @@ class CapifyEc2
     regions = determine_regions()
 
     @instances = []
+    @elbs = elb.load_balancers
 
     regions.each do |region|
       begin
@@ -127,6 +128,46 @@ class CapifyEc2
       status_output << (instance.tags[@ec2_config[:aws_roles_tag]]   || '').ljust( column_widths[:roles]   ).yellow if roles_present
       status_output << (instance.tags[@ec2_config[:aws_options_tag]] || '').ljust( column_widths[:options] ).yellow if options_present
       puts status_output.join("   ")
+    end
+  end
+
+  def display_elbs
+    unless @elbs.any?
+      puts "[Capify-EC2] No elastic load balancers were found using your 'ec2.yml' configuration.".red.bold
+      return
+    end
+    puts ("Elastic Load Balancers").bold
+    # Set minimum widths for the variable length lb attributes.
+    column_widths = { :id_min => 4, :dns_min => 4, :zone_min => 5}
+
+    # Find the longest attribute across all instances, to format the columns properly.
+    column_widths[:id] = @elbs.map{|i| i.id.to_s.ljust( column_widths[:id_min] ) || ' ' * column_widths[:id_min]}.max_by(&:length).length
+    column_widths[:dns] = @elbs.map{|i| i.dns_name || ' ' * column_widths[:dns_min]}.max_by(&:length).length
+    column_widths[:zone] = @elbs.map{|i| i.availability_zones.join(",").to_s.ljust( column_widths[:zone_min] ) || ' ' * column_widths[:zone_min]}.max_by(&:length).length
+
+    # Title row.
+    status_output = []
+    status_output << 'ID'                                .ljust( column_widths[:id]                      ).bold
+    status_output << 'DNS'                               .ljust( column_widths[:dns]                     ).bold
+    status_output << 'Zone'                              .ljust( column_widths[:zone]                    ).bold
+    puts status_output.join("   ")
+
+    @elbs.each_with_index do |lb, i|
+      status_output = []
+      status_output << (lb.id || '')                    .ljust( column_widths[:id]                      ).green
+      status_output << lb.dns_name                      .ljust( column_widths[:dns]                     ).blue.bold
+      status_output << lb.availability_zones.join(",")  .ljust( column_widths[:zone]                    ).magenta
+      puts status_output.join("   ")
+      lb.instances.each do |instance|
+        first_match = @instances.select {|x| instance.include?(x.id)}.first
+        sub_output = []
+        sub_output << " ".ljust( column_widths[:id])  # indent the length of the id column
+        sub_output << "+"
+        sub_output << (instance || '')                   .ljust( 10                                    ).red
+        sub_output << instance_health(lb, first_match                                                  ).yellow
+        sub_output << (first_match.name || ''                                                          ).cyan
+        puts sub_output.join("   ")
+      end
     end
   end
 
