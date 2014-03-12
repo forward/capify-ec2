@@ -490,6 +490,23 @@ ec2_roles :name => "web",
           }
 ```
 
+You can make a post(POST) too adding ':http_method'(Can be a symbol ':post' or a string "POST") and ':data' attribute, as follow:
+
+```ruby
+ec2_roles :name => "web",
+          :variables => {
+            :healthcheck => {
+              :path    => '/status',
+              :port    => 80,
+              :result  => '{ json_response: as_string }'
+              :https   => true,
+              :timeout => 10,
+              :http_method => :post,
+              :data => '{ json_request: as_string }'
+            }
+          }
+```
+
 ##### Usage with Elastic Load Balancers
 
 You can have Capify-EC2 automatically deregister and reregister an instance from whichever ELB it is associated with, before and after the deployment, by setting `:load_balanced` to 'true' in the role definition, for example:
