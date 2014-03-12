@@ -490,7 +490,7 @@ ec2_roles :name => "web",
           }
 ```
 
-You can make a post(POST) too adding ':http_method'(Can be a symbol ':post' or a string "POST") and ':data' attribute, as follow:
+You can make a post(POST) too adding ':http_method'(Can be a symbol ':post' or a string "POST") and ':data' attributes, as follow:
 
 ```ruby
 ec2_roles :name => "web",
