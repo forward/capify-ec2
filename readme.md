@@ -149,7 +149,7 @@ In our examples, imagine that you have three servers on EC2 named and tagged as 
 You need to add a call to `ec2_roles` in your `deploy.rb`, like so:
 
 ```ruby
-ec2_roles {:name => :web}
+ec2_roles :name => :web
 ```
 
 This will generate the following tasks:
@@ -172,7 +172,7 @@ end
 Note that there are no tasks created for 'server-2', as it does not have the role 'web'. If we were to change the `ec2_roles` definition in your `deploy.rb` to the following:
 
 ```ruby
-ec2_roles {:name => :db}
+ec2_roles :name => :db
 ```
 
 Then we will instead see the following tasks generated:
@@ -237,7 +237,7 @@ end
 You can define custom variables which will be set as standard Capistrano variables within the scope of the role you define them one, for example:
 
 ```ruby
-ec2_roles {:name=>"web", :variables => {:rails_env => 'staging'}}
+ec2_roles :name=>"web", :variables => {:rails_env => 'staging'}
 ```
 
 In this case, instances that that are tagged with the 'web' role will have the custom variable 'rails_env' available to them in any tasks they use. The following tasks would be generated:
@@ -317,7 +317,7 @@ end
 As well as defining Options at an instance level via EC2 tags, you can define an Option in your `deploy.rb` at the same time as defining the role, as follows:
 
 ```ruby
-ec2_roles {:name=>"web", :options=>{:worker=>"server-C"}}
+ec2_roles :name=>"web", :options=>{:worker=>"server-C"}
 ```
 
 In this case, you set the value of `:worker` equal to the instance name you want to be a worker. The task definition remains the same:
