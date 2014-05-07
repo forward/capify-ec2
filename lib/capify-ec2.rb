@@ -297,7 +297,7 @@ class CapifyEc2
     begin
       Timeout::timeout(options[:timeout]) do
         begin
-          if(options[:http_method].to_s.downcase == "post")
+          if(options[:via].to_s.downcase == "post")
             result = http.post(uri.path, options[:data])
           else
             result = http.get(uri.path)
