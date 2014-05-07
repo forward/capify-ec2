@@ -490,7 +490,7 @@ ec2_roles :name => "web",
           }
 ```
 
-You can make a post(POST) too adding ':http_method'(Can be a symbol ':post' or a string "POST") and ':data' attributes, as follow:
+You can make a post(POST) too adding ':via'(Can be a symbol ':post' or a string "POST") and ':data' attributes, as follow:
 
 ```ruby
 ec2_roles :name => "web",
@@ -501,7 +501,7 @@ ec2_roles :name => "web",
               :result  => '{ json_response: as_string }'
               :https   => true,
               :timeout => 10,
-              :http_method => :post,
+              :via => :post,
               :data => '{ json_request: as_string }'
             }
           }
