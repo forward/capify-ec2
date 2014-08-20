@@ -161,7 +161,7 @@ class CapifyEc2
   end
 
   def get_instance_by_dns(dns)
-    desired_instances.select {|instance| instance.dns_name == dns}.first
+    desired_instances.select {|instance| instance.contact_point == dns}.first
   end
 
   def instance_health(load_balancer, instance)
