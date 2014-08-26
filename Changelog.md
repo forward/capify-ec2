@@ -3,7 +3,7 @@
 Features:
 
   - Added a new 'ec2:elbs' command which allows you to list ELBs and the instances registered to them (thanks to stevewoolley).
-
+  - Added the ability to perform post deploy healthchecks using POST requests rather than just GET (thanks alangalvino).
 
 ## 1.5.3 (Nov 15, 2013)
 
