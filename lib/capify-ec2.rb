@@ -136,7 +136,9 @@ class CapifyEc2
       puts "[Capify-EC2] No elastic load balancers were found using your 'ec2.yml' configuration.".red.bold
       return
     end
-    puts ("Elastic Load Balancers").bold
+    puts "Elastic Load Balancers".bold
+    puts "#{@ec2_config[:aws_project_tag].bold}: #{@ec2_config[:project_tags].join(', ')}." if @ec2_config[:project_tags].any?
+    
     # Set minimum widths for the variable length lb attributes.
     column_widths = { :id_min => 4, :dns_min => 4, :zone_min => 5}
 
@@ -152,23 +154,43 @@ class CapifyEc2
     status_output << 'Zone'                              .ljust( column_widths[:zone]                    ).bold
     puts status_output.join("   ")
 
+    elbs_found_for_project = false
+
     @elbs.each_with_index do |lb, i|
+      
       status_output = []
-      status_output << (lb.id || '')                    .ljust( column_widths[:id]                      ).green
-      status_output << lb.dns_name                      .ljust( column_widths[:dns]                     ).blue.bold
-      status_output << lb.availability_zones.join(",")  .ljust( column_widths[:zone]                    ).magenta
-      puts status_output.join("   ")
+      sub_output    = []
       lb.instances.each do |instance|
         first_match = @instances.select {|x| instance.include?(x.id)}.first
-        sub_output = []
-        sub_output << " ".ljust( column_widths[:id])  # indent the length of the id column
-        sub_output << "+"
-        sub_output << (instance || '')                   .ljust( 10                                    ).red
-        sub_output << instance_health(lb, first_match                                                  ).yellow
-        sub_output << (first_match.name || ''                                                          ).cyan
-        puts sub_output.join("   ")
+
+        # Skip any instances which don't match the current Project tag, if set.
+        if @ec2_config[:project_tags].any?
+          break unless @ec2_config[:project_tags].include?(first_match.tags[ @ec2_config[:aws_project_tag] ])
+        end
+
+        elbs_found_for_project = true
+
+        instance_row = []
+        instance_row << " ".ljust( column_widths[:id] )  # indent the length of the id column
+        instance_row << "+"
+        instance_row << (instance || '')                .ljust( 10 ).red
+        instance_row << instance_health(lb, first_match)            .yellow
+        instance_row << (first_match.name || '' )                   .cyan
+        sub_output << instance_row.join("   ")
+      end
+
+      # Only display the ELB if instances matching the current Project tag were found.
+      if sub_output.any?
+        status_output << (lb.id || '')                   .ljust( column_widths[:id]   ).green
+        status_output << lb.dns_name                     .ljust( column_widths[:dns]  ).blue.bold
+        status_output << lb.availability_zones.join(",") .ljust( column_widths[:zone] ).magenta
+      
+        puts status_output.join("   ")
+        puts sub_output.join("\n")
       end
     end
+
+    puts "Capify-EC2] No elastic load balancers were found containing instances tagged with this project.".red.bold unless elbs_found_for_project
   end
 
   def server_names
