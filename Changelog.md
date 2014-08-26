@@ -1,3 +1,10 @@
+## ??? (???)
+
+Features:
+
+  - Added a new 'ec2:elbs' command which allows you to list ELBs and the instances registered to them (thanks to stevewoolley).
+
+
 ## 1.5.3 (Nov 15, 2013)
 
 Bugfixes:

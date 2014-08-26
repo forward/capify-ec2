@@ -534,6 +534,16 @@ cap ec2:status
 ```
 
 
+#### Viewing ELBs
+
+The following command will generate a listing of all ELBs with instances that match your configuration (projects):
+
+```ruby
+cap ec2:elbs
+```
+
+Note: if no `project` tag is specified in your `ec2.yml` configuration, then all ELBs and their associated instances are shown when using this command.
+
 
 #### Managing Load Balancers
 
