@@ -14,6 +14,11 @@ Capistrano::Configuration.instance(:must_exist).load do
       capify_ec2.display_instances
     end
 
+    desc "Prints out all ec2 load balancers"
+    task :elbs do
+      capify_ec2.display_elbs
+    end
+
     desc "Deregisters instance from its ELB"
     task :deregister_instance do
       instance_name = variables[:logger].instance_variable_get("@options")[:actions].first
