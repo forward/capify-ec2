@@ -1,3 +1,9 @@
+## 1.7.0 (Aug 26, 2014)
+
+Bugfixes:
+
+  - Upgraded Fog to v1.23.0 (from v1.12.0) to fix issues with ELB registration during rolling deployments (thanks jasonneylon).
+
 ## 1.6.0 (Aug 26, 2014)
 
 Features:
@@ -20,7 +26,7 @@ Bugfixes:
 Features:
 
   - The current and total servers will now be displayed during rolling deployments, to help track progress.
-  - Added support for 'ssh_options[:keys]'' being an array or a string.
+  - Added support for 'ssh_options[:keys]' being an array or a string.
 
 ## 1.5.1 (Sep 2, 2013)
 
