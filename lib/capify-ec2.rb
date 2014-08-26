@@ -360,7 +360,11 @@ class CapifyEc2
     begin
       Timeout::timeout(options[:timeout]) do
         begin
-          result = http.get(uri.path)
+          if(options[:via].to_s.downcase == "post")
+            result = http.post(uri.path, options[:data])
+          else
+            result = http.get(uri.path)
+          end
           raise "Server responded with '#{result.code}: #{result.body}', expected '#{expected_response}'" unless response_matches_expected?(result.body, expected_response)
         rescue => e
           puts "[Capify-EC2] Unexpected response: #{e}..."
