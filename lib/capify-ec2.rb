@@ -59,12 +59,16 @@ class CapifyEc2
   def security_credentials
     if @ec2_config[:use_iam_profile]
       { :use_iam_profile       => true }
+    elsif aws_session_token
+      { :aws_access_key_id     => aws_access_key_id,
+        :aws_secret_access_key => aws_secret_access_key,
+        :aws_session_token     => aws_session_token }
     else
       { :aws_access_key_id     => aws_access_key_id,
         :aws_secret_access_key => aws_secret_access_key }
     end
   end
-  
+
   def determine_regions()
     @ec2_config[:aws_params][:regions] || [@ec2_config[:aws_params][:region]]
   end
@@ -75,6 +79,10 @@ class CapifyEc2
 
   def aws_secret_access_key
     @ec2_config[:aws_secret_access_key] || Fog.credentials[:aws_secret_access_key] || ENV['AWS_SECRET_ACCESS_KEY'] || @ec2_config[:use_iam_profile] || raise("Missing AWS Secret Access Key")
+  end
+
+  def aws_session_token
+    @ec2_config[:aws_session_token] || Fog.credentials[:aws_session_token] || ENV['AWS_SESSION_TOKEN'] || nil
   end
 
   def display_instances
