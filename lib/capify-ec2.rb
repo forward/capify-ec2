@@ -1,9 +1,24 @@
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+
 require 'rubygems'
 require 'fog'
 require 'colored'
 require 'net/http'
 require 'net/https'
 require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
+
+
+def get_spark values
+  ticks = %w[▁ ▂ ▃ ▄ ▅ ▆ ▇]
+  min, range, scale = values.min, 100 - values.min, ticks.length - 1
+  if !(range == 0)
+    bar = values.map { |x| ticks[(x / 100.0 * scale).floor] }.join
+    return bar + " #{values.last.floor}%"
+  else
+    return values.map { |x| ticks[1] }.join
+  end
+end
 
 class CapifyEc2
 
@@ -77,6 +92,37 @@ class CapifyEc2
     @ec2_config[:aws_secret_access_key] || Fog.credentials[:aws_secret_access_key] || ENV['AWS_SECRET_ACCESS_KEY'] || @ec2_config[:use_iam_profile] || raise("Missing AWS Secret Access Key")
   end
 
+  def fetch_cpu instance_id
+    @cw = Fog::AWS::CloudWatch.new(:aws_access_key_id => aws_access_key_id,
+                                   :aws_secret_access_key => aws_secret_access_key)
+                                   
+    time = Time.new
+    time.gmtime
+
+    dimensions = [{
+      "Name" => "InstanceId",
+      "Value" => instance_id
+    }]
+
+    result = @cw.get_metric_statistics({'Namespace' => 'AWS/EC2',
+                                        'MetricName' => 'CPUUtilization',
+                                        'Period' => 120,
+                                        'Statistics' => ['Average'],
+                                        'StartTime' => DateTime.parse((time - 60*60).to_s),
+                                        'EndTime' => DateTime.parse(time.to_s),
+                                        'Dimensions' => dimensions})
+
+    datapoints = result.body.fetch("GetMetricStatisticsResult", {})["Datapoints"]
+
+    require "pry"
+    binding.pry
+
+    if datapoints
+      return get_spark datapoints.map {|x| x["Average"]}
+    end
+    return ""
+  end
+
   def display_instances
     unless desired_instances and desired_instances.any?
       puts "[Capify-EC2] No instances were found using your 'ec2.yml' configuration.".red.bold
@@ -111,6 +157,7 @@ class CapifyEc2
     status_output << 'Type'                       .ljust( column_widths[:type]    ).bold
     status_output << 'DNS'                        .ljust( column_widths[:dns]     ).bold
     status_output << 'Zone'                       .ljust( 10                      ).bold
+    status_output << 'CPU'                       .ljust( 16                      ).bold
     status_output << @ec2_config[:aws_stages_tag] .ljust( column_widths[:stages]  ).bold if stages_present
     status_output << @ec2_config[:aws_roles_tag]  .ljust( column_widths[:roles]   ).bold if roles_present
     status_output << @ec2_config[:aws_options_tag].ljust( column_widths[:options] ).bold if options_present
@@ -124,6 +171,7 @@ class CapifyEc2
       status_output << instance.flavor_id                                  .ljust( column_widths[:type]    ).cyan
       status_output << instance.contact_point                              .ljust( column_widths[:dns]     ).blue.bold
       status_output << instance.availability_zone                          .ljust( 10                      ).magenta
+      status_output << fetch_cpu(instance.id).ljust( 16                      ).green
       status_output << (instance.tags[@ec2_config[:aws_stages_tag]]  || '').ljust( column_widths[:stages]  ).yellow if stages_present
       status_output << (instance.tags[@ec2_config[:aws_roles_tag]]   || '').ljust( column_widths[:roles]   ).yellow if roles_present
       status_output << (instance.tags[@ec2_config[:aws_options_tag]] || '').ljust( column_widths[:options] ).yellow if options_present
