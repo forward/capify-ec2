@@ -31,9 +31,6 @@ class CapifyCloudwatch
 
     dp = result.body.fetch("GetMetricStatisticsResult", {})["Datapoints"]
 
-    require "pry"
-    binding.pry
-
     if dp
       return get_spark_line(dp.map {|x| x["Average"]})
     end
@@ -42,7 +39,11 @@ class CapifyCloudwatch
 
   def get_spark_line values
     scale = @ticks.length - 1
-    bar = values.map { |x| @ticks[(x / 100.0 * scale).floor] }.join
-    return bar + " #{values.last.floor}%"
+    if values
+      bar = values.map { |x| @ticks[(x / 100.0 * scale).floor] }.join
+      return bar + " #{values.last.round}%"
+    else
+      ""
+    end
   end
 end

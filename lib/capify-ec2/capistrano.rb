@@ -14,6 +14,11 @@ Capistrano::Configuration.instance(:must_exist).load do
       capify_ec2.display_instances
     end
 
+    desc "As status but with CPU usage graphs (slower due to Cloudwatch requests)"
+    task :graph do
+      capify_ec2.display_instances(graph: true)
+    end
+
     desc "Prints out all ec2 load balancers"
     task :elbs do
       capify_ec2.display_elbs
