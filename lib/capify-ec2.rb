@@ -114,9 +114,6 @@ class CapifyEc2
 
     datapoints = result.body.fetch("GetMetricStatisticsResult", {})["Datapoints"]
 
-    require "pry"
-    binding.pry
-
     if datapoints
       return get_spark datapoints.map {|x| x["Average"]}
     end
