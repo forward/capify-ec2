@@ -4,6 +4,14 @@
 require 'fog'
 
 class CapifyCloudwatch
+  # Threshold => color
+  # Color is applied if metric exceeds the threshold, KEEP IN ORDER
+  Colors = {
+    0 => :green,
+    50 => :yellow,
+    90 => :red
+  }
+
   def initialize(key_id, secret)
     @ticks = %w[▁ ▂ ▃ ▄ ▅ ▆ ▇]
     @cw = Fog::AWS::CloudWatch.new(:aws_access_key_id => key_id,
@@ -37,11 +45,23 @@ class CapifyCloudwatch
     return ""
   end
 
-  def get_spark_line values
+  def colorize_output(output, value)
+    colored = output
+    Colors.each do |threshold, color|
+      if value >= threshold
+        colored = output.send(color)
+      end
+    end
+    colored
+  end
+
+  def get_spark_line(values)
     scale = @ticks.length - 1
+
     if values
+      final = values.last.round
       bar = values.map { |x| @ticks[(x / 100.0 * scale).floor] }.join
-      return bar + " #{values.last.round}%"
+      return colorize_output(bar.ljust(10) + " #{final}%", final)
     else
       ""
     end

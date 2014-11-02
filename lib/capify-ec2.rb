@@ -135,7 +135,7 @@ class CapifyEc2
       status_output << (instance.tags[@ec2_config[:aws_stages_tag]]  || '').ljust( column_widths[:stages]  ).yellow if stages_present
       status_output << (instance.tags[@ec2_config[:aws_roles_tag]]   || '').ljust( column_widths[:roles]   ).yellow if roles_present
       status_output << (instance.tags[@ec2_config[:aws_options_tag]] || '').ljust( column_widths[:options] ).yellow if options_present
-      status_output << cw.get_metric(instance.id, "CPUUtilization").ljust(16).green if graph
+      status_output << cw.get_metric(instance.id, "CPUUtilization").ljust(16) if graph
       puts status_output.join("   ")
     end
   end
