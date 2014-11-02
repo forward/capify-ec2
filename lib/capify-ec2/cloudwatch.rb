@@ -58,7 +58,7 @@ class CapifyCloudwatch
   def get_spark_line(values)
     scale = @ticks.length - 1
 
-    if values
+    if values and values.count > 0
       final = values.last.round
       bar = values.map { |x| @ticks[(x / 100.0 * scale).floor] }.join
       return colorize_output(bar.ljust(10) + " #{final}%", final)
