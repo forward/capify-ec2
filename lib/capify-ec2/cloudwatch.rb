@@ -8,7 +8,7 @@ class CapifyCloudwatch
   # Color is applied if metric exceeds the threshold, KEEP IN ORDER
   Colors = {
     0 => :green,
-    50 => :yellow,
+    70 => :yellow,
     90 => :red
   }
 
@@ -61,7 +61,7 @@ class CapifyCloudwatch
     if values and values.count > 0
       final = values.last.round
       bar = values.map { |x| @ticks[(x / 100.0 * scale).floor] }.join
-      return colorize_output(bar.ljust(10) + " #{final}%", final)
+      return colorize_output(bar.rjust(13, @ticks.first) + " #{final}%", final)
     else
       ""
     end
