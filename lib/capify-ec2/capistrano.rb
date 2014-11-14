@@ -225,7 +225,6 @@ Capistrano::Configuration.instance(:must_exist).load do
       named_instance = capify_ec2.get_instance_by_name(server_name)
 
       task named_instance.name.to_sym do
-        remove_default_roles
         server_address = named_instance.contact_point
 
         if named_instance.respond_to?(:roles)
@@ -268,7 +267,6 @@ Capistrano::Configuration.instance(:must_exist).load do
       region_instances.each {|instance| instances << instance} unless region_instances.nil?
     end
     task region.to_sym do
-      remove_default_roles
       instances.each do |instance|
         define_role(role, instance)
       end
@@ -278,7 +276,6 @@ Capistrano::Configuration.instance(:must_exist).load do
   def define_instance_roles(role, instances)
     instances.each do |instance|
       task instance.name.to_sym do
-        remove_default_roles
         define_role(role, instance)
       end
     end
@@ -286,7 +283,6 @@ Capistrano::Configuration.instance(:must_exist).load do
 
   def define_role_roles(role, instances)
     task role[:name].to_sym do
-      remove_default_roles
       instances.each do |instance|
         define_role(role, instance)
       end
@@ -325,10 +321,6 @@ Capistrano::Configuration.instance(:must_exist).load do
     else
         "#{singular}s"
     end
-  end
-
-  def remove_default_roles
-    roles.reject! { true }
   end
 
 end
