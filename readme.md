@@ -81,11 +81,11 @@ By default, Capify-EC2 will attempt to use the credentials found in your `ec2.ym
 
 ###### Via Fog Configuration
 
-If you wish, you can have Capify-EC2 use the AWS credentials found in your Fog configuration, instead of instead of specifying `:aws_access_key_id` and `:aws_secret_access_key` in the YML configuration file. Refer to the Fog documentation for details on specifying AWS credentials.
+If you wish, you can have Capify-EC2 use the AWS credentials found in your Fog configuration, instead of instead of specifying `:aws_access_key_id` and `:aws_secret_access_key` in the YML configuration file. Optionally, if you requires session tokens or federated users, you can set ` :aws_session_token `. Refer to the Fog documentation for details on specifying AWS credentials.
 
 ###### Via Environment Variables
 
-If you wish, you can define AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as environment variables, instead of specifying `:aws_access_key_id` and `:aws_secret_access_key` in the YML configuration file.
+If you wish, you can define AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as environment variables, instead of specifying `:aws_access_key_id` and `:aws_secret_access_key` in the YML configuration file. Optionally, if you requires session tokens or federated users, you can set the environment variable AWS_SESSION_TOKEN.
 
 ###### Via AWS IAM Roles
 
