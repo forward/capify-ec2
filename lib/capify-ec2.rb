@@ -1,9 +1,14 @@
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+
 require 'rubygems'
 require 'fog'
 require 'colored'
 require 'net/http'
 require 'net/https'
 require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/server')
+require File.expand_path(File.dirname(__FILE__) + '/capify-ec2/cloudwatch')
+
 
 class CapifyEc2
 
@@ -85,11 +90,13 @@ class CapifyEc2
     @ec2_config[:aws_session_token] || Fog.credentials[:aws_session_token] || ENV['AWS_SESSION_TOKEN'] || nil
   end
 
-  def display_instances
+  def display_instances(graph: false)
     unless desired_instances and desired_instances.any?
       puts "[Capify-EC2] No instances were found using your 'ec2.yml' configuration.".red.bold
       return
     end
+
+    cw = CapifyCloudwatch.new(aws_access_key_id, aws_secret_access_key) if graph
 
     # Set minimum widths for the variable length instance attributes.
     column_widths = { :name_min => 4, :type_min => 4, :dns_min => 5, :roles_min => @ec2_config[:aws_roles_tag].length, :stages_min => @ec2_config[:aws_stages_tag].length, :options_min => @ec2_config[:aws_options_tag].length }
@@ -122,6 +129,7 @@ class CapifyEc2
     status_output << @ec2_config[:aws_stages_tag] .ljust( column_widths[:stages]  ).bold if stages_present
     status_output << @ec2_config[:aws_roles_tag]  .ljust( column_widths[:roles]   ).bold if roles_present
     status_output << @ec2_config[:aws_options_tag].ljust( column_widths[:options] ).bold if options_present
+    status_output << 'CPU'                       .ljust( 16                      ).bold if graph
     puts status_output.join("   ")
     
     desired_instances.each_with_index do |instance, i|
@@ -135,6 +143,7 @@ class CapifyEc2
       status_output << (instance.tags[@ec2_config[:aws_stages_tag]]  || '').ljust( column_widths[:stages]  ).yellow if stages_present
       status_output << (instance.tags[@ec2_config[:aws_roles_tag]]   || '').ljust( column_widths[:roles]   ).yellow if roles_present
       status_output << (instance.tags[@ec2_config[:aws_options_tag]] || '').ljust( column_widths[:options] ).yellow if options_present
+      status_output << cw.get_metric(instance.id, "CPUUtilization").ljust(16) if graph
       puts status_output.join("   ")
     end
   end
