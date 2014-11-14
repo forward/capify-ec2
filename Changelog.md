@@ -1,3 +1,14 @@
+## 1.8.0.pre (Nov 14, 2014)
+
+Features:
+
+  - Support for IAM temporary security credentials (thanks jeffdevine).
+  - Added new `ec2:graph` command which shows an enhanced status along with instance CPU utilisation powered by CloudWatch (thanks stuartquin).
+
+Bugfixes:
+
+  - Fixed issue with chaining multiple roles (thanks marcinc).
+
 ## 1.7.0 (Aug 26, 2014)
 
 Bugfixes:

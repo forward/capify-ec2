@@ -72,6 +72,10 @@ Note: `:aws_access_key_id` and `:aws_secret_access_key` are required, unless you
 
   Use this option to use IAM roles for authentication, rather than an access key id and secret access key.
 
+* :aws_session_token
+
+  If you are an IAM user that only has access to temporary credentials, you can provide your session token here to authenticate.
+
 
 ##### AWS Credentials
 
@@ -90,6 +94,8 @@ If you wish, you can define AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as envir
 ###### Via AWS IAM Roles
 
 If you have IAM roles set up on your box to allow querying EC2 information you tell Fog to use IAM roles and you will not need to provide any credentials at runtime. For more information on IAM roles read Amazon's [IAM documentation](http://aws.amazon.com/iam/).
+
+If you are an IAM user that only has access to temporary credentials, you can use `:aws_session_token: "YOUR TOKEN HERE"` to authenticate.
 
 ###### Ordering
 
@@ -550,6 +556,14 @@ The following command will generate a listing of all instances that match your c
 cap ec2:status
 ```
 
+##### Viewing CPU Utilisation
+
+The following command will generate an enhanced listing of all instances that match your configuration (projects and roles) as with `ec2:status`, with the addition of CPU utilisation graphs powered by CloudWatch. You will need to ensure your IAM permissions allow this.
+
+```ruby
+cap ec2:graph
+```
+
 
 #### Viewing ELBs
 
@@ -768,10 +782,10 @@ Report Issues/Feature requests on [GitHub Issues](http://github.com/forward/capi
  * Make your feature addition or bug fix.
  * Add tests for it. This is important so I don't break it in a
    future version unintentionally.
- * Commit, do not mess with rakefile, version, or history.
-   (if you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)
+ * Commit, do not change the version, or changelog.
+   (if you want to have your own version, that is fine but bump version in a commit by itself so I can ignore it when I pull)
  * Send me a pull request. Bonus points for topic branches.
 
 ### Copyright
 
-Copyright (c) 2011, 2012, 2013 Forward. See [LICENSE](https://github.com/forward/capify-ec2/blob/master/LICENSE) for details.
+Copyright (c) 2011, 2012, 2013, 2014 Forward. See [LICENSE](https://github.com/forward/capify-ec2/blob/master/LICENSE) for details.
