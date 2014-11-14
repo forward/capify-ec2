@@ -215,7 +215,7 @@ class CapifyEc2
   end
 
   def project_instances
-    @instances.select {|instance| @ec2_config[:project_tags].include?(instance.tags[@ec2_config[:aws_project_tag]])}
+    @instances.select {|instance| instance.tags[@ec2_config[:aws_project_tag]].split(%r{,\s*}).include?(@ec2_config[:project_tag]) rescue false }
   end
 
   def desired_instances(region = nil)

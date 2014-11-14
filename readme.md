@@ -37,7 +37,7 @@ Note: `:aws_access_key_id` and `:aws_secret_access_key` are required, unless you
 
 * :project_tag
 
-  If this is defined, Capify-EC2 will only create namespaces and tasks for the EC2 instances that have a matching 'Project' tag. By default, all instances available to the specified AWS access key will be used.
+  If this is defined, Capify-EC2 will only create namespaces and tasks for the EC2 instances that include a matching project in a comma separated list 'Project' tag. By default, all instances available to the specified AWS access key will be used.
 
   It is possible to include multiple projects simultaneously by using the :project_tags parameter, like so:
 
@@ -109,7 +109,7 @@ You will need to create instance tags using the AWS Management Console or API, t
 
 * Tag 'Project'
 
-  Used with the `:project_tag` option in `config/ec2.yml` to limit Capify-EC2's functionality to a subset of your instances.
+  Used with the `:project_tag` option in `config/ec2.yml` to limit Capify-EC2's functionality to a subset of your instances. This is a comma separated list of projects involving this machine
 
 * Tag 'Roles'
 
