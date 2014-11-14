@@ -1,3 +1,9 @@
+## 1.8.0.pre2 (Nov 14, 2014)
+
+Features:
+  
+  - Added support for comma seperated project tags (thanks theist).
+
 ## 1.8.0.pre (Nov 14, 2014)
 
 Features:

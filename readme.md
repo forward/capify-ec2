@@ -109,7 +109,7 @@ You will need to create instance tags using the AWS Management Console or API, t
 
 * Tag 'Project'
 
-  Used with the `:project_tag` option in `config/ec2.yml` to limit Capify-EC2's functionality to a subset of your instances. This is a comma separated list of projects involving this machine
+  Used with the `:project_tag` option in `config/ec2.yml` to limit Capify-EC2's functionality to a subset of your instances. This can also be a comma separated list of projects involving this machine.
 
 * Tag 'Roles'
 
