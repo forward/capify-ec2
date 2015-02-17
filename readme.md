@@ -12,7 +12,17 @@ __Note__: Capistrano 3 is completely incompatible with Capistrano 2, and therefo
 
 or add the gem to your project's Gemfile.
 
-You will need to create a YML configuration file at `config/ec2.yml` that looks like the following:
+Then, add the gem to your `deploy.rb`:
+
+```ruby
+require "capify-ec2/capistrano"
+```
+
+
+
+#### Configuration
+
+Create a YML configuration file (default path is `./config/ec2.yml`) with the following contents:
 
 ```ruby
 :aws_access_key_id: "YOUR ACCESS KEY"
@@ -23,15 +33,9 @@ You will need to create a YML configuration file at `config/ec2.yml` that looks 
 :project_tag: "YOUR APP NAME"
 ```
 
-Finally, add the gem to your `deploy.rb`:
+You can change the path to your `ec2.yml` by placing the following in your `deploy.rb` *before* calling `ec2_roles`:
 
-```ruby
-require "capify-ec2/capistrano"
-```
-
-
-
-#### Configuration
+`set :ec2_config, 'location/of/my/ec2.yml'`
 
 Note: `:aws_access_key_id` and `:aws_secret_access_key` are required, unless you provide them via the two alternative methods detailed below under 'AWS Credentials' or have the `:use_iam_profile` option set to use IAM roles. `:region` is also required. Other settings are optional.
 
