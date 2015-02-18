@@ -123,17 +123,24 @@ Capistrano::Configuration.instance(:must_exist).load do
 
         load_balancer_to_reregister = nil # Set to nil again here, to ensure it always starts off nil for every iteration.
         is_load_balanced = false
+        load_balancer_name = false
 
         server_roles.each do |a_role|
           role a_role, server_dns, all_options[a_role][server_dns]
           is_load_balanced = true if all_options[a_role][server_dns][:load_balanced]
+
+          load_balancer_name = all_options[a_role][server_dns][:elb_name] if all_options[a_role][server_dns][:elb_name]
         end
 
         puts "[Capify-EC2]"
         puts "[Capify-EC2] (#{index+1} of #{all_servers.length}) Beginning deployment to #{instance_dns_with_name_tag(server_dns)} with #{server_roles.count > 1 ? 'roles' : 'role'} '#{server_roles.join(', ')}'...".bold
 
-        unless dry_run
-          load_balancer_to_reregister = capify_ec2.deregister_instance_from_elb_by_dns(server_dns) if is_load_balanced
+        if is_load_balanced && !dry_run
+          if load_balancer_name
+            load_balancer_to_reregister = capify_ec2.deregister_instance_from_named_elb_by_dns(server_dns, load_balancer_name)
+          else
+            load_balancer_to_reregister = capify_ec2.deregister_instance_from_elb_by_dns(server_dns)
+          end
         end
 
         # Call the standard 'cap deploy' task with our redefined role containing a single server.

@@ -550,7 +550,20 @@ If an instance has been tagged with multiple roles, this behaviour will apply if
 
 If an instance is not associated with any ELBs, then the behaviour will be skipped silently, even if `:load_balanced` is set to 'true'.
 
+If an instance belongs to multiple ELBs, you can force which ELB is chosen by using the :elb_name parameter like this:
 
+```ruby
+ec2_roles :name => "web",
+          :variables => {
+            :healthcheck => {
+                :path   => '/status',
+                :port   => 80,
+                :result => 'OK'
+              }
+            :load_balanced => true,
+            :elb_name => "the_name_of_your_elb"
+          }
+```
 
 #### Viewing All Instances
 

@@ -306,6 +306,21 @@ class CapifyEc2
     end
   end
 
+  def deregister_instance_from_named_elb_by_dns(server_dns, load_balancer_name)
+    instance = get_instance_by_dns(server_dns)
+    load_balancer = get_load_balancer_by_name(load_balancer_name)
+
+    if load_balancer
+      puts "[Capify-EC2] Removing instance from named ELB '#{load_balancer.id}'..."
+
+      result = elb.deregister_instances_from_load_balancer(instance.id, load_balancer.id)
+      raise "Unable to remove instance from ELB '#{load_balancer.id}'..." unless result.status == 200
+
+      return load_balancer
+    end
+    false
+  end
+
   def deregister_instance_from_elb_by_dns(server_dns)
     instance = get_instance_by_dns(server_dns)
     load_balancer = get_load_balancer_by_instance(instance.id)
