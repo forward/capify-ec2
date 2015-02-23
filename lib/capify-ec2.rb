@@ -266,7 +266,6 @@ class CapifyEc2
       lbs[load_balancer.id] = load_balancer
     end
     lbs[load_balancer_name]
-
   end
 
   def deregister_instance_from_elb(instance_name)
@@ -306,19 +305,24 @@ class CapifyEc2
     end
   end
 
-  def deregister_instance_from_named_elb_by_dns(server_dns, load_balancer_name)
+  def deregister_instance_from_named_elbs_by_dns(server_dns, load_balancer_names)
     instance = get_instance_by_dns(server_dns)
-    load_balancer = get_load_balancer_by_name(load_balancer_name)
 
-    if load_balancer
-      puts "[Capify-EC2] Removing instance from named ELB '#{load_balancer.id}'..."
+    lbs = []
+    for load_balancer_name in load_balancer_names do
+      load_balancer = get_load_balancer_by_name(load_balancer_name)
 
-      result = elb.deregister_instances_from_load_balancer(instance.id, load_balancer.id)
-      raise "Unable to remove instance from ELB '#{load_balancer.id}'..." unless result.status == 200
+      if load_balancer
+        puts "[Capify-EC2] Removing instance from named ELB '#{load_balancer.id}'..."
 
-      return load_balancer
+        result = elb.deregister_instances_from_load_balancer(instance.id, load_balancer.id)
+        raise "Unable to remove instance from ELB '#{load_balancer.id}'..." unless result.status == 200
+
+        lbs << load_balancer
+      end
     end
-    false
+
+    lbs
   end
 
   def deregister_instance_from_elb_by_dns(server_dns)
@@ -331,7 +335,11 @@ class CapifyEc2
       result = elb.deregister_instances_from_load_balancer(instance.id, load_balancer.id)
       raise "Unable to remove instance from ELB '#{load_balancer.id}'..." unless result.status == 200
 
-      return load_balancer
+      #TODO: The ability to remove an instance from multiple ELBs has been added, which returns an [] of elbs.
+      #I've taken a shortcut here to return an array for this (the single ELB case). However, the correct solution
+      #would be to extend the above method to remove an instance from multiple ELBs by DNS too.
+      #This may break things for some users however? Needs to be checked.
+      return [load_balancer]
     end
     false
   end
