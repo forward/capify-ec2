@@ -178,6 +178,7 @@ Capistrano::Configuration.instance(:must_exist).load do
         end
 
         for load_balancer_to_reregister in load_balancers_to_reregister do
+          puts "[Capify-EC2] Starting registration of ELB '#{load_balancer_to_reregister.id}'"
           reregistered = capify_ec2.reregister_instance_with_elb_by_dns(server_dns, load_balancer_to_reregister, 60)
           if reregistered
             puts "[Capify-EC2] Instance registration with ELB '#{load_balancer_to_reregister.id}' successful.".green.bold
