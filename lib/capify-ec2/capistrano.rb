@@ -121,7 +121,7 @@ Capistrano::Configuration.instance(:must_exist).load do
 
         roles.clear
 
-        load_balancers_to_reregister = nil # Set to nil again here, to ensure it always starts off nil for every iteration.
+        load_balancers_to_reregister = [] # Set to empty again here, to ensure it always starts off empty for every iteration.
         is_load_balanced = false
         load_balancer_names = false
 
@@ -174,7 +174,6 @@ Capistrano::Configuration.instance(:must_exist).load do
               end
             end
           end
-
         end
 
         for load_balancer_to_reregister in load_balancers_to_reregister do
