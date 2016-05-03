@@ -309,17 +309,25 @@ class CapifyEc2
     instance = get_instance_by_dns(server_dns)
 
     lbs = []
+    threads = []
+
     for load_balancer_name in load_balancer_names do
-      load_balancer = get_load_balancer_by_name(load_balancer_name)
+      threads << Thread.new({
+        load_balancer = get_load_balancer_by_name(load_balancer_name)
 
-      if load_balancer
-        puts "[Capify-EC2] Removing instance from named ELB '#{load_balancer.id}'..."
+        if load_balancer
+          puts "[Capify-EC2] Removing instance from named ELB '#{load_balancer.id}'..."
 
-        result = elb.deregister_instances_from_load_balancer(instance.id, load_balancer.id)
-        raise "Unable to remove instance from ELB '#{load_balancer.id}'..." unless result.status == 200
+          result = elb.deregister_instances_from_load_balancer(instance.id, load_balancer.id)
+          raise "Unable to remove instance from ELB '#{load_balancer.id}'..." unless result.status == 200
 
-        lbs << load_balancer
-      end
+          lbs << load_balancer
+        end
+      })
+    end
+
+    for t in threads do
+      t.join
     end
 
     lbs
