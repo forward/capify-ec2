@@ -312,8 +312,8 @@ class CapifyEc2
     threads = []
 
     for load_balancer_name in load_balancer_names do
-      threads << Thread.new({
-        load_balancer = get_load_balancer_by_name(load_balancer_name)
+      threads << Thread.new(load_balancer_name) do |lb|
+        load_balancer = get_load_balancer_by_name(lb)
 
         if load_balancer
           puts "[Capify-EC2] Removing instance from named ELB '#{load_balancer.id}'..."
@@ -323,7 +323,7 @@ class CapifyEc2
 
           lbs << load_balancer
         end
-      })
+      end
     end
 
     for t in threads do

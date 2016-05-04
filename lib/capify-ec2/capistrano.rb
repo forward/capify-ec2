@@ -179,17 +179,17 @@ Capistrano::Configuration.instance(:must_exist).load do
         threads = []
 
         for load_balancer_to_reregister in load_balancers_to_reregister do
-          threads << Thread.new({
-            puts "[Capify-EC2] Starting registration of ELB '#{load_balancer_to_reregister.id}'"
+          threads << Thread.new(load_balancer_to_reregister) do |lb|
+            puts "[Capify-EC2] Starting registration of ELB '#{lb.id}'"
             
-            reregistered = capify_ec2.reregister_instance_with_elb_by_dns(server_dns, load_balancer_to_reregister, 60)
+            reregistered = capify_ec2.reregister_instance_with_elb_by_dns(server_dns, lb, 60)
             if reregistered
-              puts "[Capify-EC2] Instance registration with ELB '#{load_balancer_to_reregister.id}' successful.".green.bold
+              puts "[Capify-EC2] Instance registration with ELB '#{lb.id}' successful.".green.bold
             else
-              puts "[Capify-EC2] Instance registration with ELB '#{load_balancer_to_reregister.id}' failed!".red.bold
+              puts "[Capify-EC2] Instance registration with ELB '#{lb.id}' failed!".red.bold
               raise CapifyEC2RollingDeployError.new("ELB registration timeout exceeded", server_dns)
             end  
-          })
+          end
         end
 
         for t in threads do
