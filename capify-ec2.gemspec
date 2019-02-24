@@ -23,4 +23,5 @@ Gem::Specification.new do |s|
   s.add_dependency('aws-sdk', '~> 3')
   s.add_dependency('colored', '=1.2')
   s.add_dependency('capistrano', '~> 2.14')
+  s.add_dependency('net-ssh', '=3.0.2')
 end
