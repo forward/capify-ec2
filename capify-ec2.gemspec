@@ -19,7 +19,9 @@ Gem::Specification.new do |s|
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
-  s.add_dependency('fog', '>= 1.23.0')
+  s.add_dependency('fog', '=1.23.0')
+  s.add_dependency('aws-sdk', '~> 3')
   s.add_dependency('colored', '=1.2')
   s.add_dependency('capistrano', '~> 2.14')
+  s.add_dependency('net-ssh', '=3.0.2')
 end
